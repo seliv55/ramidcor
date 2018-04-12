@@ -39,6 +39,7 @@ title<-paste("Raw_Data_File", "cells", "tracer_molecule", "labelled_positions","
        
        for(nam in intab$Name) {ofi<-paste(celdir,nam,sep="")
           tmp<-subset(res,(grepl(as.character(nam),res)))
+          if(length(tmp)){
             mzrow<-subset(tmp,(grepl("mz:",tmp)))
            mzs<- strsplit(strsplit(mzrow[1],"c: ")[[1]][1],"mz: ")[[1]][2];
            titl<-paste("absolute_values,CDF_file: Max",mzs)
@@ -58,7 +59,7 @@ title<-paste("Raw_Data_File", "cells", "tracer_molecule", "labelled_positions","
           tmp<-c(titl1,tmp)
         write("\n",ofi,append=T)
         write(tmp,ofi,append=T)
-        }
+        }}
    Sys.time() - start.time
   }
        
@@ -163,13 +164,14 @@ getdistr<-function(fi,intab){
     isomax<-which.max(pikint)
     pikpos<-which.max(intens[,isomax])
     maxpik<-intens[pikpos,isomax]; smaxpik<-"max_peak:";
-     if(maxpik>8000000) {smaxpik<-"**** !?MAX_PEAK:"; print(paste("** max=",maxpik,"   ",nm,"   **"))}
+     if(maxpik>8300000) {smaxpik<-"**** !?MAX_PEAK:"; print(paste("** max=",maxpik,"   ",nm,"   **")); break;}
     bas<-apply(intens,2,basln,pos=pikpos,ofs=5)
   if((pikpos>2)&(pikpos<(nrow(intens)-2))){
      for(k in 1:nmass) pikint[k]<-sum(intens[(pikpos-2):(pikpos+2),k])
    }
     delta<-round(pikint-bas); s5tp<-"5_timepoints:"
-     if(delta[1]/delta[2] > 0.05) { s5tp<-"*!?* 5_timepoints:"; print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm))}
+     if(delta[1]/delta[2] > 0.05) { s5tp<-"*!?* 5_timepoints:";
+      print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); break; }
                 rat<-delta/bas
                 rel<-round(delta/max(delta),4)      # normalization
     pikpos<-pikposc-piklim+pikpos-1;

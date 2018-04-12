@@ -31,7 +31,7 @@ rumidcor<-function(infile="sw620",dadir="files/SW620/"){
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
-    if(file.size(fn)>1000){
+    if((file.size(fn)>1000)&(file.exists(fn))){
       con<-file(fn,open="r")
       line<-readLines(con)
       dati<-which(grepl("absolute_v",line))
