@@ -132,6 +132,7 @@ getdistr<-function(fi,intab){
     pikintc<-apply(intens,2,max)
    if(max(abs(diff(pospiks)))>9) goodiso<-which.min(abs(pospiks-tpclose))  else goodiso<-which.max(pikintc)
         pikposc<-pospiks[goodiso]
+        
   if((abs(pikposc-tpclose)<rtdev)&(pikposc>2)&(pikposc<(nrow(intens)-2))) {
         maxpikc<-pikintc[goodiso]
     for(k in 1:nmass) pikintc[k]<-sum(intens[(pikposc-2):(pikposc+2),k])
@@ -170,8 +171,10 @@ getdistr<-function(fi,intab){
      for(k in 1:nmass) pikint[k]<-sum(intens[(pikpos-2):(pikpos+2),k])
    }
     delta<-round(pikint-bas); s5tp<-"5_timepoints:"
-     if(delta[1]/delta[2] > 0.05) { s5tp<-"*!?* 5_timepoints:";
-      print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); break; }
+#     { }      else pikmz<-c(0,pikmz)
+    if((misofin[1]==pikmz[1])&(delta[1]/delta[2] > 0.05)) { s5tp<-"*!?* 5_timepoints:";
+      print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); break }
+          
                 rat<-delta/bas
                 rel<-round(delta/max(delta),4)      # normalization
     pikpos<-pikposc-piklim+pikpos-1;
@@ -193,6 +196,7 @@ getdistr<-function(fi,intab){
          result<-c(result,archar)
 #   archar<-paste(c(nm,"max-base:",delta),collapse=" ")
 #         result<-c(result,archar)
+        if(misofin[1]!=pikmz[1]) {delta<-c(0,delta); rel<-c(0,rel)}
    archar<-paste(c(fi,nm,maxpik,delta),collapse=" ")
          res1<-c(res1,archar)
 #   archar<-paste(c(nm,"relative:",rel),collapse=" ")
