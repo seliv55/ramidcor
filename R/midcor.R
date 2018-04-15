@@ -31,7 +31,7 @@ rumidcor<-function(infile="sw620",dadir="files/SW620/"){
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
-    if((file.size(fn)>1000)&(file.exists(fn))){
+    if((file.exists(fn))&(file.size(fn)>1000)){
       con<-file(fn,open="r")
       line<-readLines(con)
       dati<-which(grepl("absolute_v",line))
@@ -66,6 +66,10 @@ correct<-function(fn,dfi,frag,formula){#fname is the name of file with raw data;
  fn1<-paste(fn,"_c",sep="");
  write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1)
   write.table(format(cbind(dfi[1],fr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
+  phen<-""
+    a<- wphen(fi,nm,intab$Fragment[i], intab$Formula[i], intab$RT[i], pikmz,delta)
+    phenom<-c(phenom,a)
+  phen<-paste(dfi[1,1],fr[1,])
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
     lcon<-grep('cold',dfi[,1])
