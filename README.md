@@ -77,7 +77,9 @@ siMID reads the CDF files presented in the working directory, and then
  
  source("R/simid.R") 
  
- source("R/libsim.R") 
+ source("R/midcor.R") 
+ 
+ source("R/lib.R") 
  
  library(ncdf4)
 ```

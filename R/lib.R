@@ -69,97 +69,124 @@ mdistr<-function(nreal,msd,mm,nln){ #label incorporation
 #     for(i in 2:(colon-2)) fr[i]<- fr[i]/fr[colon];
       fr }
 
-stat<-function(dfr,nln,nfrg,first,last){            i<-1; lfr<-length(dfr);
-  dfr1=data.frame();
-  while(i<nln){ cnlab<-substr(as.character(dfr[i,1]),first,last); k<-i;
-    while(substr(as.character(dfr[k+1,1]),first,last)==cnlab) k<-k+1; 
-      if(k>i) {sredn<-dfr[i,];
-                 for(j in 2:lfr) sredn[j]<-mean(dfr[i:k,j]);
-                 for(j in 2:lfr) if(sredn[j]<0.) sredn[j]<-0.;
-#                 srsum<-sum(sredn[2:(2+nfrg)]);
-#               sredn[2:(2+nfrg)]<-sredn[2:(2+nfrg)]/srsum;
-               otkl<-dfr[1,]; otkl[1]<-as.factor("**sd**");
-                 for(j in 2:length(otkl)) otkl[j]<-sd(dfr[i:k,j]);
-        dfr1<-rbind(dfr1,sredn,otkl);
-                  i<-k;}
-       else{dfr1=rbind(dfr1,dfr[i,]);}
-          i<-i+1;}
-          return(list(dfr1,nln))
-} 
 
-suminj<-function(dfr,nln,colon,first,last){         i<-1;
-  while(i<nln-1){ cnlab<-substr(as.character(dfr[i,1]),first,last); 
-    while(substr(as.character(dfr[i+1,1]),first,last)==cnlab) {
-      dfr[i,2:colon]<-dfr[i,2:colon]+dfr[i+1,2:colon];
-        dfr<-dfr[-(i+1),]; nln<-nln-1;}
-             i<-i+1;}
-             return(list(dfr,nln))
-}
-remsd<-function(mid,lbl){ numl=nrow(mid);
-    k=1
-        for(i in 1:(numl)){
-         if(as.character(mid[k,1])==lbl) {mid=mid[-k,]}
-          else {k=k+1}
-        }
-    return(mid)
-}
+basln<-function(vec,pos=length(vec),ofs=0){# baseline
+   basl<--1; basr<--1;bas<-0
+  if(pos>ofs) basl<-mean(vec[1:(pos-ofs)])
+  if(pos<(length(vec)-ofs)) basr<-mean(vec[(pos+ofs):length(vec)])
+  if((basl>0)&(basr>0)) bas<-min(basl,basr)
+  else if(basl<0) bas<-basr
+  else if(basr<0) bas<-basl
+ return(bas*5)}
 
-chirow<-function(dfr,draw,nmi,dlfrg,dteor){     len=length(draw);
-        mid=numeric(nmi); tmp<-draw;
-         for(j in 1:(dlfrg+1)) mid=mid+dfr[1,j+1]*dteor[j,];
-          tmp[2:(2+dlfrg)]= ((draw[2:(2+dlfrg)]-mid[1:(1+dlfrg)])/0.005)^2;
-          tmp[len]=sqrt(sum(tmp[2:(2+dlfrg)]));
-    return(tmp)
-}
+readcdf<-function(fi) {
+ nc <- nc_open(fi, readunlim=FALSE)  #open cdf file
+   rett<-ncvar_get( nc, "scan_acquisition_time" )
+   tiv<-ncvar_get( nc, "total_intensity" )
+   npoint<-ncvar_get( nc, "point_count" )
+     mz<-ncvar_get( nc, "mass_values" )
+     iv<-ncvar_get( nc, "intensity_values" )
+   nc_close( nc )
+        return(list(mz,iv,npoint,rett,tiv))    }
+        
+  savplt<-function(mm,mm0,nma,plname){
+  png(paste("../graf/",plname,"png",sep=""))
+  par(mfrow=c(2,1))
+   plot(mm[,2],xlim=c(nma-50,nma+50))
+   plot(mm0[,1],xlim=c(nma-50,nma+50))
+   dev.off()
+  }
 
-alchi<-function(dfr,draw,nmi,dlfrg,dteor){     tmp<-draw; numl=nrow(draw);
-            for(i in 1:(numl)){ tmp[i,]=chirow(dfr[i,],draw[i,],nmi,dlfrg,dteor)};
-    return(tmp)
-}
-
-chandis<-function(mdis,pvar,pfix,fac){
-   len=length(mdis); suma=0;
-    for(i in 2:len) if(i!=pfix) suma=suma+mdis[i];
-     pnew=fac*mdis[pvar]; delta=mdis[pvar]-pnew
-  mdis[pvar]=pnew;   sumb=suma-delta
-    for(i in 2:len) if(i!=pfix) mdis[i]=mdis[i]*suma/sumb;
-   return(mdis)
-}
-
-ci99<-function(mid,rada,nadi,pvar,fac,nmass,nfrg,chi){
-      len=length(rada)
-     while(chi<6.63){ if(mid[pvar]>0.99){break}; if(mid[pvar]<0.001){break}
-#     for(i in 1:5){ if(mid[pvar]>0.99){break}; if(mid[pvar]<0.001){break}
-     mid=chandis(mid,pvar,99,fac);
-     tmp=chirow(mid,rada,nmass,nfrg,nadi); chi=tmp[len]
+info<-function(mz,iv,npoint){
+#  mz,iv,npoint: mz, intensities and number mz points in every scan
+      j<-1
+     mzpt<-numeric() # number of m/z points in each pattern
+     tpos<-numeric() # initial time position for each m/z pattern 
+     mzi<-numeric()  # initial value for each m/z pattern presented in the CDF file
+     mzind<-numeric()# index in mz array corresponding to mzi
+     mzrang<-list()  # list of mz patterns presented in the .CDF
+  mzpt[j]<-npoint[1]; tpos[j]<-1; mzi[j]<-mz[1]; imz<-1; mzind[j]<-imz
+  mzrang[[1]]<-mz[1:mzpt[1]];
+    for(i in 2:length(npoint)) { imz<-imz+npoint[i-1];# mz index
+     if(mzi[j]!=mz[imz]){  j<-j+1; tpos[j]<-i;  mzpt[j]<-npoint[i]; mzi[j]<-mz[imz];
+      mzind[j]<-imz; mzrang[[j]]<-mz[(mzind[j]):(mzind[j]-1+mzpt[j])] }
     }
-       return(list(mid,chi))
-}
+  tpos[length(tpos)+1]<- length(npoint) # add the last timepoint
+  return(list(mzpt,tpos,mzind,mzrang))
+  }
 
-dechi<-function(mid0,pvar,pfix,fac,rada,nadi,nmass,nfrg,chi0){
-     chi=chi0; len=length(rada); mid=mid0
-     for(i in 1:2){      if((mid[pvar]>0.99)|(mid[pvar]<0.005)) {break}
-      mid=chandis(mid,pvar,pfix,fac)
-      tmp=chirow(mid,rada,nmass,nfrg,nadi); chi=tmp[len];
-        if(chi>chi0) {fac=1./fac}
-         else { mid0=mid; chi0=chi;}
-     }
-       return(list(mid0,chi0))
-}
+ftitle<-function(){paste("Raw_Data_File", "cells", "tracer_molecule", "labelled_positions","abundance", "injection","Replicate", "Incubation_time", "Metabolite_name", "CHEBI","atomic_positions", "Empirical_formula", "retention(min)", "mz_monitored", "signal_intensity", "isotopologue", "isotologue_abundance")}
 
-halfci<-function(mid,rada,fac,fac1,mmlab,nmass,nfrg, ncyc){
-     chi=0; len=length(mid); nma=which(mid==max(mid[2:len]));
-     for(i in 1:ncyc){
-   lst=ci99(mid,rada,mmlab,nma,fac,nmass,nfrg,chi); mid=lst[[1]]; chi=lst[[2]]
-   for(j in 2:(nfrg+2)) if(j!=nma){lst=dechi(mid,j,nma,fac1,rada,mmlab,nmass,nfrg,chi); mid=lst[[1]]; chi=lst[[2]]}
-     }
-     return(lst)
+wphen<-function(fi,nm,fragg, formul, rtt, pikmz,delta){
+      a<-strsplit(fi,'_')[[1]]
+      cel<-a[1]; incub<-substr(a[2],1,nchar(a[2]))
+      trac<-switch(a[3],
+                  "UGln"=c("[U-C13]-Glutamine","1,1,1,1,1",100),
+                  "12Glc"=c("[1,2-C13]-Glucose","1,1,0,0,0,0",50),
+                  default=c(0,0,0))
+      repl<-a[4]; inj<-a[length(a)]
+      nikiso<-paste("m",c(-1:(length(pikmz)-2)),sep="")
+  return(paste(fi,cel,trac[1],trac[2],trac[3],repl,inj,incub,nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso))
+   }
+fitG <-function(x,y,mu,sig,scale){
+# x,y: x and y values for fitting
+# mu,sig,scale: initial values for patameters to fit  
+  f = function(p){
+    d = p[3]*dnorm(x,mean=p[1],sd=p[2])
+    sum((d-y)^2)
+  }
+  optim(c(mu,sig,scale),f,method="CG")
+ # nlm(f, c(mu,sig,scale))
+# output: optimized parameters
+   }
+  
+fitdist<-function(ymat,nma,pint=5,cini=2,fsig=1.5,fsc=2.){ # fits distributions
+# x: vector of x-values
+# ymat: matrix of experimental values where columns are time courses for sequential mz
+# nma: point of maximal value
+# pint: half interval taken for fitting
+# cini: initial column number
+  cfin<-ncol(ymat)#cini+nmi-1;
+  nmi<-cfin-cini+1 #ncol(ymat)-1;
+   fscale<-numeric()
+   xe<-c((nma-pint):(nma+pint));    facin<-max(ymat[nma,]);
+   yemat<-ymat[(nma-pint):(nma+pint),cini:cfin]/facin
+      yfmat<-yemat
+          mu<-xe[pint+1]
+          sig<-(xe[2*pint]-xe[2])/fsig
+   for(i in 1:nmi){
+          scale<-yemat[pint,i]*sig/fsc
+   fp<-fitG(xe,yemat[,i],mu,sig,scale)
+    fscale[i]<-fp$par[3]*facin
+    yfmat[,i]<-fp$par[3]*dnorm(xe,mean=fp$par[1],sd=fp$par[2])
+#    fscale[i]<-fp$estimate[3]*facin
+#    yfmat[,i]<-fp$estimate[3]*dnorm(xe,mean=fp$estimate[1],sd=fp$estimate[2])
+#   mu<-fp$par[1];  sig<-fp$par[2];# scale<-fp$par[3]
+   }
+   list(xe,yemat,yfmat,fscale)
+#   xe: x-values used for fit
+#   yemat: matrix of experimental intensities
+#   yfmat: matrix of fitted intensities
+#   fscale: areas of peaks
 }
-confin<-function(mid0,rada,fac,fac1,mmlab,nmass,nfrg, ncyc,fn1){
-  lst=halfci(mid0,rada,fac,fac1,mmlab,nmass,nfrg,11)
-     cat(" mid: ",as.character(format(lst[[1]],digits=4))," chi=",as.character(lst[[2]]),"\n",file=fn1,append=TRUE)
-    fac=1/fac;
-  lst=halfci(mid0,rada,fac,fac1,mmlab,nmass,nfrg,11)
-     cat(" mid: ",as.character(format(lst[[1]],digits=4))," chi=",as.character(lst[[2]]),"\n",file=fn1,append=TRUE)
-}
+     
+plal<-function(fi,x,me,mf){# plots intensities from matrix mm; nma - position of peaks; abs - 0 or 1 depending on mm
+# fi: file to plot in
+# x: vector of x-values
+# me: matrix of experimental values where columns are time courses for sequential mz
+# mf: matrix of fittings corresponding to me
+    fi<-strsplit(fi,"CDF")[[1]][1]
+  png(paste("../graf/",fi,"png",sep=""))
+  x_range<-range(x[1],x[length(x)])
+  g_range <- range(0,1)
+  nkriv<-ncol(me); sleg<-"m0"
+  plot(x,me[,1], xlim=x_range, ylim=g_range,col=1)
+  lines(x,mf[,1],col=1, lty=1)
+   for(i in 2:nkriv){ sleg<-c(sleg,paste("m",i-1))
+    points(x,me[,i],pch=i,col=i)
+    lines(x,mf[,i],col=i, lty=i)
+  }
+  legend("topright",sleg,col = 1:length(sleg),lty=1:length(sleg))
+   dev.off()
+   }
 

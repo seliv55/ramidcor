@@ -13,8 +13,8 @@ metan<-function(infile="sw620",cdfdir="SW620/",fiout="out.csv"){ #infile="metdat
    lcdf<-dir(path = cdfdir,pattern=pat)
    outdir="files/"
    intab<-read.table(infile,header=T,sep=" ")
-     
-title<-paste("Raw_Data_File", "cells", "tracer_molecule", "labelled_positions","abundance", "injection","Replicate", "Incubation_time", "Metabolite_name", "CHEBI","atomic_positions", "Empirical_formula", "retention(min)", "mz_monitored", "signal_intensity", "isotopologue", "isotologue_abundance")
+
+title<-ftitle()
 
      df0<-data.frame(); # data frame to write Ramid output in PhenoMeNal format
      res<-character(); res1<-character(); res2<-character(); phen<-""
@@ -63,36 +63,6 @@ title<-paste("Raw_Data_File", "cells", "tracer_molecule", "labelled_positions","
    Sys.time() - start.time
   }
        
-info<-function(mz,iv,npoint){
-#  mz,iv,npoint: mz, intensities and number mz points in every scan
-      j<-1
-     mzpt<-numeric() # number of m/z points in each pattern
-     tpos<-numeric() # initial time position for each m/z pattern 
-     mzi<-numeric()  # initial value for each m/z pattern presented in the CDF file
-     mzind<-numeric()# index in mz array corresponding to mzi
-     mzrang<-list()  # list of mz patterns presented in the .CDF
-  mzpt[j]<-npoint[1]; tpos[j]<-1; mzi[j]<-mz[1]; imz<-1; mzind[j]<-imz
-  mzrang[[1]]<-mz[1:mzpt[1]];
-    for(i in 2:length(npoint)) { imz<-imz+npoint[i-1];# mz index
-     if(mzi[j]!=mz[imz]){  j<-j+1; tpos[j]<-i;  mzpt[j]<-npoint[i]; mzi[j]<-mz[imz];
-      mzind[j]<-imz; mzrang[[j]]<-mz[(mzind[j]):(mzind[j]-1+mzpt[j])] }
-    }
-  tpos[length(tpos)+1]<- length(npoint) # add the last timepoint
-  return(list(mzpt,tpos,mzind,mzrang))
-  }
-  
-wphen<-function(fi,nm,fragg, formul, rtt, pikmz,delta){
-      a<-strsplit(fi,'_')[[1]]
-      cel<-a[1]; incub<-substr(a[2],1,nchar(a[2]))
-      trac<-switch(a[3],
-                  "UGln"=c("[U-C13]-Glutamine","1,1,1,1,1",100),
-                  "12Glc"=c("[1,2-C13]-Glucose","1,1,0,0,0,0",50),
-                  default=c(0,0,0))
-      repl<-a[4]; inj<-a[length(a)]
-      nikiso<-paste("m",c(-1:(length(pikmz)-2)),sep="")
-  return(paste(fi,cel,trac[1],trac[2],trac[3],repl,inj,incub,nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso))
-   }
-   
 getdistr<-function(fi,intab){
 # fi: file name
 # intab: parameters of metabolite (mz for m0, retention time)
@@ -141,16 +111,14 @@ getdistr<-function(fi,intab){
                 ratc<-deltac/basc
 
 # main peak
-  if(ratc[goodiso]>9){ a<-as.character(intab$Fragment[i])
+  if(ratc[goodiso]>3){ a<-as.character(intab$Fragment[i])
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
-                   a<-as.character(intab$Formula[i])
-          Cpos<-regexpr("C",a); Hpos<-regexpr("H",a); Spos<-regexpr("S",a); Sipos<-regexpr("Si",a)
-    nCder<-as.numeric(substr(a,Cpos+1,Hpos-1))
-    if(Sipos>0) nSi<-as.numeric(substr(a,Sipos+2,Sipos+2)) else nSi<-0
-    if((Spos>0)&(Spos!=Sipos)) nS<-as.numeric(substr(a,Spos+1,Spos+1)) else nS<-0
-        isomax<-nCfrg+5 # number of isotopomers to present calculated from formula
-    ppos<-which((mz0[i]-1)==mzrang[[ranum]]) # position of desired MID in the selected mzrang
-    nmass<-min(isomax,length(mzrang[[ranum]])-ppos+1) # number of isotopores to present in the spectrum
+#                   a<-as.character(intab$Formula[i])
+#          Cpos<-regexpr("C",a); Hpos<-regexpr("H",a); Spos<-regexpr("S",a); Sipos<-regexpr("Si",a)
+#    nCder<-as.numeric(substr(a,Cpos+1,Hpos-1))
+#    if(Sipos>0) nSi<-as.numeric(substr(a,Sipos+2,Sipos+2)) else nSi<-0
+#    if((Spos>0)&(Spos!=Sipos)) nS<-as.numeric(substr(a,Spos+1,Spos+1)) else nS<-0
+        nmass<-nCfrg+5 # number of isotopomers to present calculated from formula
     misofin<-array((mz0[i]-1):(mz0[i]+nmass-2)) # isotopores to present in the spectrum
     lmisofin<-mzrang[[ranum]] %in% misofin # do they are present in the given mzrang?
     pikmz<-mzrang[[ranum]][lmisofin] # extrat those that are present
@@ -172,7 +140,7 @@ getdistr<-function(fi,intab){
    }
     delta<-round(pikint-bas); s5tp<-"5_timepoints:"
 #     { }      else pikmz<-c(0,pikmz)
-    if((misofin[1]==pikmz[1])&(delta[1]/delta[2] > 0.05)) { s5tp<-"*!?* 5_timepoints:";
+    if((misofin[1]==pikmz[1])&(delta[1]/delta[2] > 0.075)) { s5tp<-"*!?* 5_timepoints:";
       print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); break }
           
                 rat<-delta/bas
@@ -207,69 +175,5 @@ getdistr<-function(fi,intab){
               }
            }
            }
- return(list(result,res1,res2,phenom))}
- 
-
-fitG <-function(x,y,mu,sig,scale){
-# x,y: x and y values for fitting
-# mu,sig,scale: initial values for patameters to fit  
-  f = function(p){
-    d = p[3]*dnorm(x,mean=p[1],sd=p[2])
-    sum((d-y)^2)
-  }
-  optim(c(mu,sig,scale),f,method="CG")
- # nlm(f, c(mu,sig,scale))
-# output: optimized parameters
-   }
-  
-fitdist<-function(ymat,nma,pint=5,cini=2,fsig=1.5,fsc=2.){ # fits distributions
-# x: vector of x-values
-# ymat: matrix of experimental values where columns are time courses for sequential mz
-# nma: point of maximal value
-# pint: half interval taken for fitting
-# cini: initial column number
-  cfin<-ncol(ymat)#cini+nmi-1;
-  nmi<-cfin-cini+1 #ncol(ymat)-1;
-   fscale<-numeric()
-   xe<-c((nma-pint):(nma+pint));    facin<-max(ymat[nma,]);
-   yemat<-ymat[(nma-pint):(nma+pint),cini:cfin]/facin
-      yfmat<-yemat
-          mu<-xe[pint+1]
-          sig<-(xe[2*pint]-xe[2])/fsig
-   for(i in 1:nmi){
-          scale<-yemat[pint,i]*sig/fsc
-   fp<-fitG(xe,yemat[,i],mu,sig,scale)
-    fscale[i]<-fp$par[3]*facin
-    yfmat[,i]<-fp$par[3]*dnorm(xe,mean=fp$par[1],sd=fp$par[2])
-#    fscale[i]<-fp$estimate[3]*facin
-#    yfmat[,i]<-fp$estimate[3]*dnorm(xe,mean=fp$estimate[1],sd=fp$estimate[2])
-#   mu<-fp$par[1];  sig<-fp$par[2];# scale<-fp$par[3]
-   }
-   list(xe,yemat,yfmat,fscale)
-#   xe: x-values used for fit
-#   yemat: matrix of experimental intensities
-#   yfmat: matrix of fitted intensities
-#   fscale: areas of peaks
-}
-     
-plal<-function(fi,x,me,mf){# plots intensities from matrix mm; nma - position of peaks; abs - 0 or 1 depending on mm
-# fi: file to plot in
-# x: vector of x-values
-# me: matrix of experimental values where columns are time courses for sequential mz
-# mf: matrix of fittings corresponding to me
-    fi<-strsplit(fi,"CDF")[[1]][1]
-  png(paste("../graf/",fi,"png",sep=""))
-  x_range<-range(x[1],x[length(x)])
-  g_range <- range(0,1)
-  nkriv<-ncol(me); sleg<-"m0"
-  plot(x,me[,1], xlim=x_range, ylim=g_range,col=1)
-  lines(x,mf[,1],col=1, lty=1)
-   for(i in 2:nkriv){ sleg<-c(sleg,paste("m",i-1))
-    points(x,me[,i],pch=i,col=i)
-    lines(x,mf[,i],col=i, lty=i)
-  }
-  legend("topright",sleg,col = 1:length(sleg),lty=1:length(sleg))
-   dev.off()
-   }
-     
+ return(list(result,res1,res2,phenom))}     
 
