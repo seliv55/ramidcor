@@ -3,15 +3,15 @@ To extract mass isotopomer distribution from CDF files saved by mass spectromete
 
 ![Logo](figs/logo.png)
 
-# siMID
+# SIMID
 Version: 1.0
 
 ## Short description
 R-program to read CDF files containing time course of mass spectra of 13C-labeled metabolites, and write the extracted spectra in a format appropriate for further analysis.
 
 ## Description
-siMID is a computer program designed to read the machine-generated files saved in netCDF format containing registered time course of m/z chromatograms. It evaluates the mass isotopomer distribution (MID) at the moment when peaks are reached, and saves the obtained information in a table, making it ready for further correction for natural isotope occurrence.
-siMID is written in “R”, uses library “ncdf4” (it should be installed before the first use of siMID)  and contains several functions, located in the files “siMID.R” and "libcdf.R", designed to read cdf-files, and analyze and visualize the spectra that they contain. The functionality of siMID is similar to that of RaMID, with the difference that it does not need the previously prepared table with a list of CDF files and additional information, but uses onl short description of conditions provided by the experimentalist.
+SIMID is a computer program designed to read the machine-generated files saved in netCDF format containing registered time course of m/z chromatograms. It evaluates the mass isotopomer distribution (MID) at the moment when peaks are reached, and saves the obtained information in a table, making it ready for further correction for natural isotope occurrence.
+SIMID is written in “R”, uses library “ncdf4” (it should be installed before the first use of siMID)  and contains several functions, located in the files “simid.R” and "lib.R", designed to read cdf-files, and analyze and visualize the spectra that they contain. The functionality of SIMID is similar to that of RaMID, with the difference that it does not need the previously prepared table with a list of CDF files and additional information, but uses onl short description of conditions provided by data providers.
 
 ## Key features
 - primary processing of 13C mass isotopomer data obtained with GCMS

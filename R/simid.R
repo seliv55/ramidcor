@@ -147,7 +147,7 @@ getdistr<-function(fi,intab){
                 rel<-round(delta/max(delta),4)      # normalization
     pikpos<-pikposc-piklim+pikpos-1;
 
-    a<- wphen(fi,nm,intab$Fragment[i], intab$Formula[i], intab$RT[i], pikmz,delta)
+    a<- wphen(fi,nm,intab$Fragment[i], intab$Formula[i], intab$RT[i], pikmz,delta,delta)
     phenom<-c(phenom,a)
 
    archar<-paste(c(fi,nm),collapse=" ")

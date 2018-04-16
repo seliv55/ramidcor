@@ -27,7 +27,7 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
 }
 
 rumidcor<-function(infile="sw620",dadir="files/SW620/"){
-   intab<-read.table(infile,header=T,sep=" ")
+   intab<-read.table(infile,header=T,sep=" "); phenom<-""
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
@@ -35,18 +35,24 @@ rumidcor<-function(infile="sw620",dadir="files/SW620/"){
       con<-file(fn,open="r")
       line<-readLines(con)
       dati<-which(grepl("absolute_v",line))
+      mzi<-as.numeric(strsplit(line[dati]," ")[[1]][-1:-2])
       datf<-which(grepl("relative_v",line[dati:length(line)]))
       line=""; close(con)
       con<-file(fn,open="rt")
       df0<-read.table(con,skip=(dati-1),header=T,nrows=(datf-4))
       close(con)
-       correct(fn,df0,as.character(intab$Fragment[imet]),as.character(intab$Formula[imet]))
+      phenom<- c(phenom,correct(fn,df0,mzi,intab[imet,])) 
             }    }
+         fiout<-"fenform"               
+       write(ftitle(),fiout)
+       write(phenom,fiout,append=T)
 }
 
-correct<-function(fn,dfi,frag,formula){#fname is the name of file with raw data;
+correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
 # samb,samf,cndb,cndf are the positions of the initial and final characters in the row name
 # designating the biological sample and conditions correspondingly
+ frag<-as.character(metdat$Fragment)
+ formula<-as.character(metdat$Formula)
  nfrg<-as.numeric(substr(frag,4,nchar(frag)))-as.numeric(substr(frag,2,2))+1
    Cpos<-regexpr("C",formula); Hpos<-regexpr("H",formula);
    Spos<-regexpr("S",formula); Sipos<-regexpr("Si",formula)
@@ -58,21 +64,18 @@ correct<-function(fn,dfi,frag,formula){#fname is the name of file with raw data;
 # theoretic distribution:
           mmlab<-mtr(nmass,coln,nC,nSi,nS);
 # normalization
-    ef<-sum(gcms[1])/sum(gcms[2])
-    gcms<-elim(gcms,ef)
-    gcmsn<-gcms[1:nln,]/apply(gcms,1,sum)
+    if(metdat$mz0>=mzi[2]) {ef<-sum(gcms[1])/sum(gcms[2]); gcm<-elim(gcms,ef)
+        } else gcm<-as.matrix(cbind(gcm[,-1],0))
+    gcmsn<-gcm[1:nln,]/apply(gcm,1,sum)
 # mass fractions
    fr<-mdistr(nmass,gcmsn,mmlab,nln);# write mass fractions without correction:
  fn1<-paste(fn,"_c",sep="");
  write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1)
   write.table(format(cbind(dfi[1],fr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
-  phen<-""
-    a<- wphen(fi,nm,intab$Fragment[i], intab$Formula[i], intab$RT[i], pikmz,delta)
-    phenom<-c(phenom,a)
-  phen<-paste(dfi[1,1],fr[1,])
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
     lcon<-grep('cold',dfi[,1])
+if(length(lcon)>0){
  if(length(lcon)>1){
     ncon<-which.min(abs(1-fr[lcon,1]))
     corr<-mmlab[1,]-gcmsn[lcon,][ncon,] 
@@ -87,3 +90,9 @@ correct<-function(fn,dfi,frag,formula){#fname is the name of file with raw data;
  write("*** Correction factor: **",fn1,append=TRUE)
      write.table(format(t(corr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
 }
+  phen<-""; fr<-cbind(0,fr[,-ncol(fr)]); gc<-cbind(0,gcms[,-ncol(gcms)])
+  for(i in 1:nrow(dfi)){
+    a<- wphen(as.character(dfi[i,1]),metdat$Name,frag, formula, metdat$RT, mzi,round(gcms[i,]),fr[i,])
+    phen<-c(phen,a)
+  }
+return(phen)}

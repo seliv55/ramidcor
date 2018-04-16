@@ -117,7 +117,7 @@ info<-function(mz,iv,npoint){
 
 ftitle<-function(){paste("Raw_Data_File", "cells", "tracer_molecule", "labelled_positions","abundance", "injection","Replicate", "Incubation_time", "Metabolite_name", "CHEBI","atomic_positions", "Empirical_formula", "retention(min)", "mz_monitored", "signal_intensity", "isotopologue", "isotologue_abundance")}
 
-wphen<-function(fi,nm,fragg, formul, rtt, pikmz,delta){
+wphen<-function(fi,nm,fragg, formul, rtt, pikmz,delta,corr){
       a<-strsplit(fi,'_')[[1]]
       cel<-a[1]; incub<-substr(a[2],1,nchar(a[2]))
       trac<-switch(a[3],
@@ -126,7 +126,7 @@ wphen<-function(fi,nm,fragg, formul, rtt, pikmz,delta){
                   default=c(0,0,0))
       repl<-a[4]; inj<-a[length(a)]
       nikiso<-paste("m",c(-1:(length(pikmz)-2)),sep="")
-  return(paste(fi,cel,trac[1],trac[2],trac[3],repl,inj,incub,nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso))
+  return(noquote(paste(fi,cel,trac[1],trac[2],trac[3],repl,inj,incub,nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso,corr)))
    }
 fitG <-function(x,y,mu,sig,scale){
 # x,y: x and y values for fitting
