@@ -81,6 +81,8 @@ siMID reads the CDF files presented in the working directory, and then
  
  source("R/lib.R") 
  
+ source("R/stadyn.R") 
+ 
  library(ncdf4)
 ```
 
@@ -88,14 +90,23 @@ siMID reads the CDF files presented in the working directory, and then
 
 ## Usage Instructions
 
-- The analysis performed when executing the  command (with default arguments):
+- The programs support three subsequent steps of preparation of raw MS data for the fluxomic analysis. 
+1. Extraction of raw mass spectra from NetCDF files saved by a mass spectrometer, containing recordings in selected intervals of m/z. It is performed using SIMID executing the  command (default arguments are shown):
 
 ```
   metan(infile="sw620",cdfdir="SW620/",outdir="files/")
 ```
 - here the parameters are (i) the path to an input file with a short description of input data explained in detail below; (ii) the path to a directory containing the .CDF files with raw mass spectrometer data, i.e. registration of the injections into the mass spectrometer performed in the course of the given analyzed experiment; (iii) a path to the directory for the output results (extracted relative intensities for all m/z constituting the mass spectra (or mass isotopomer distributions (MID)) of the metabolites of interests).
-The file containing the results provided by siMID (here "siMIDout.csv") can be used by RaMID, or directly proceed for further correction by MIDcor.
 
+2. The file containing the results provided by SIMID (here "out.csv") can be used to fill the database Metabolights. The other outputs prepared by SIMID and saved in "files/SW620/" are made convenient for visual checking and further correction for natural isotope abundance by MIDcor.
+ 
+```
+ rumidcor(infile="sw620",dadir="files/SW620/")
+```
+3. Then the corrected data can be checked and wrong data edited/eliminated manually. The tool Stadyn reads the checked files performs simple statistical analysis for repeated measurements and prepares the data for simulation.
+```
+ isoform(isofi='toIsodyn',dor="SW620/",marca=3)
+```
 ## The format of input data description
 
 - The input data description file (here "sw620") contains the additional information prepared by the data provider that is necessary for the analysis and for the output table to write in the format accepted as exchangeable with the Metabolights database. It contains the following columns: 
@@ -117,7 +128,7 @@ Based on this information and that extracted from the CDF files presented in the
 - Run the provided example using the command:
 
 ```
-  metan(infile="sw620",cdfdir="SW620/",outdir="files/")
+  metan(infile="sw620",cdfdir="SW620/",fiout="out.csv")
 ```
 
 

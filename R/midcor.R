@@ -71,7 +71,7 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
    fr<-mdistr(nmass,gcmsn,mmlab,nln);# write mass fractions without correction:
  fn1<-paste(fn,"_c",sep="");
  write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1)
-  write.table(format(cbind(dfi[1],fr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
+  write.table(format(cbind(dfi[1],fr[,1:(nfrg+1)]),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
     lcon<-grep('cold',dfi[,1])
@@ -84,11 +84,11 @@ if(length(lcon)>0){
  }
      tmp<-t(apply(gcmsn,1,'+',corr)); 
      fr<-mdistr(nmass,tmp,mmlab,nln);
-     res<-cbind(dfi[1],fr)
- write("\n*** Samples fully corrected **",fn1,append=TRUE)
-    write.table(format(res,digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
- write("*** Correction factor: **",fn1,append=TRUE)
-     write.table(format(t(corr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
+     res<-cbind(dfi[1],fr[,1:(nfrg+1)])
+   write("\n*** Samples fully corrected **",fn1,append=TRUE)
+ write.table(format(res,digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
+   write("*** Correction factor: **",fn1,append=TRUE)
+ write.table(format(t(corr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
 }
   phen<-""; fr<-cbind(0,fr[,-ncol(fr)]); gc<-cbind(0,gcms[,-ncol(gcms)])
   for(i in 1:nrow(dfi)){
