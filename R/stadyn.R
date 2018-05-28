@@ -42,5 +42,5 @@ msdlist<-function(trati){nln<-length(trati)
         metm<-c(metm,tmp2,tmp3)
   }   }  } }
         metm<-c(metm,tmp4)
-  write(metm,paste("mark",marca,sep=""))
+  write(metm,paste(dor,"mark",marca,sep=""))
    return (metm)}
