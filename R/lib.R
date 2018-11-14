@@ -71,12 +71,7 @@ mdistr<-function(nreal,msd,mm,nln){ #label incorporation
 
 
 basln<-function(vec,pos=length(vec),ofs=0){# baseline
-   basl<--1; basr<--1;bas<-0
-  if(pos>ofs) basl<-mean(vec[1:(pos-ofs)])
-  if(pos<(length(vec)-ofs)) basr<-mean(vec[(pos+ofs):length(vec)])
-  if((basl>0)&(basr>0)) bas<-min(basl,basr)
-  else if(basl<0) bas<-basr
-  else if(basr<0) bas<-basl
+   bas<-mean(vec[vec<(2*min(vec))])
  return(bas*5)}
 
 readcdf<-function(fi) {
@@ -117,16 +112,27 @@ info<-function(mz,iv,npoint){
 
 ftitle<-function(){paste("Raw_Data_File", "cells", "tracer_molecule", "labelled_positions","abundance", "injection","Replicate", "Incubation_time", "Metabolite_name", "CHEBI","atomic_positions", "Empirical_formula", "retention(min)", "mz_monitored", "signal_intensity", "isotopologue", "isotologue_abundance")}
 
-wphen<-function(fi,nm,fragg, formul, rtt, pikmz,delta,corr){
-      a<-strsplit(fi,'_')[[1]]
-      cel<-a[1]; incub<-substr(a[2],1,nchar(a[2]))
-      trac<-switch(a[3],
-                  "UGln"=c("[U-C13]-Glutamine","1,1,1,1,1",100),
-                  "12Glc"=c("[1,2-C13]-Glucose","1,1,0,0,0,0",50),
-                  default=c(0,0,0))
-      repl<-a[4]; inj<-a[length(a)]
+wphen<-function(fi,nm,fragg, formul, rtt, pikmz,delta,corr=delta){
+tracer<-c("Gluc","12Glc","Glutamina","UGln","[cC][oO][lL][dD]")
+inctime<-c(40,'0[Hh]','6[hH]',24,"-")
+cells<-c("A549","NCI","BEAS2B","SW620","HUVEC")
+replicate<-c("R[0-9]_","G[0-9]_","_[0-9]_","[ _][0-9][ _]")
+
+for(i in 1:length(tracer)) if(grepl(tracer[i],fi)) break;
+trac<-switch(i,c("D-[1,2-C13]-Glucose","1,1,0,0,0,0",50),
+c("D-[1,2-C13]-Glucose","1,1,0,0,0,0",50),
+c("[3-C13]-Glutamine","0,0,1,0,0",100),
+c("[U-C13]-Glutamine","1,1,1,1,1",100),
+c("Glucose","0,0,0,0,0,0",100)
+)
+  for(incub in inctime) if(grepl(incub,fi)) break;
+  for(cel in cells) if(grepl(cel,fi)) break;
+  for(rep in replicate) if(grepl(rep,fi)) break;
+      l=regexpr(rep, fi)+1
+           inj<-substr(fi,nchar(fi),nchar(fi))
+           rep<-substr(fi,l,l)
       nikiso<-paste("m",c(-1:(length(pikmz)-2)),sep="")
-  return(noquote(paste(fi,cel,trac[1],trac[2],trac[3],repl,inj,incub,nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso,corr)))
+  return(paste(shQuote(paste(fi,'.CDF',sep='')),cel,trac[1],trac[2],trac[3],rep,inj,strsplit(incub,'[',fixed=T)[[1]][1],nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso,corr))
    }
 fitG <-function(x,y,mu,sig,scale){
 # x,y: x and y values for fitting
