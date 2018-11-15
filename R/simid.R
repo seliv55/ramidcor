@@ -8,7 +8,7 @@ metan<-function(infile="../filesimid/sw620",cdfdir="../filesimid/SW620/",fiout="
    pat=".CDF"
    lcdf<-dir(path = cdfdir,pattern=pat)
    outdir="files/"
-   intab<-read.table(infile,header=T,sep=",")
+   intab<-read.table(infile,header=T,sep=" ")
 
 title<-ftitle()
 

@@ -131,7 +131,7 @@ c("Glucose","0,0,0,0,0,0",100)
       l=regexpr(rep, fi)+1
            inj<-substr(fi,nchar(fi),nchar(fi))
            rep<-substr(fi,l,l)
-      nikiso<-paste("m",c(-1:(length(pikmz)-2)),sep="")
+      nikiso<-paste(substr(nm,1,3),"_13C",c(-1:(length(pikmz)-2)),sep="")
   return(paste(shQuote(paste(fi,'.CDF',sep='')),cel,trac[1],trac[2],trac[3],rep,inj,strsplit(incub,'[',fixed=T)[[1]][1],nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso,corr))
    }
 fitG <-function(x,y,mu,sig,scale){
