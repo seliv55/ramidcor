@@ -43,8 +43,8 @@ tdist<-function(nc,nsi,ns){ #final natural mass distribution
  
 elim<-function(msd,f1){#normalization of GCMS data accounting for the loss of protons
   msd1<-matrix(nrow=nrow(msd),ncol=ncol(msd),0)
-    for (i in 2:(ncol(msd)-1)) msd1[,i-1]<-as.numeric(msd[,i]*(1+f1)-msd[,i+1]*f1);
-      msd1[,ncol(msd1)-1]<-as.numeric(msd[,ncol(msd)])
+    for (i in 2:(ncol(msd)-1)) msd1[,i-1]<-msd[,i]*(1+f1)-msd[,i+1]*f1;
+      msd1[,ncol(msd1)-1]<-msd[,ncol(msd)]
      return(msd1)  }
    
 mtr<-function(nfrg,nmass,nC,nSi,nS){ #various numbers of labeled 13C with tails of natural distributions
