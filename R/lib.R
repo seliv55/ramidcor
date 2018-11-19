@@ -43,8 +43,8 @@ tdist<-function(nc,nsi,ns){ #final natural mass distribution
  
 elim<-function(msd,f1){#normalization of GCMS data accounting for the loss of protons
   msd1<-matrix(nrow=nrow(msd),ncol=ncol(msd),0)
-    for (i in 2:(ncol(msd)-1)) msd1[,i-1]<-as.numeric(msd[,i]*(1+f1)-msd[,i+1]*f1);
-      msd1[,ncol(msd1)-1]<-as.numeric(msd[,ncol(msd)])
+    for (i in 2:(ncol(msd)-1)) msd1[,i-1]<-msd[,i]*(1+f1)-msd[,i+1]*f1;
+      msd1[,ncol(msd1)-1]<-msd[,ncol(msd)]
      return(msd1)  }
    
 mtr<-function(nfrg,nmass,nC,nSi,nS){ #various numbers of labeled 13C with tails of natural distributions
@@ -131,7 +131,7 @@ c("Glucose","0,0,0,0,0,0",100)
       l=regexpr(rep, fi)+1
            inj<-substr(fi,nchar(fi),nchar(fi))
            rep<-substr(fi,l,l)
-      nikiso<-paste("m",c(-1:(length(pikmz)-2)),sep="")
+      nikiso<-paste(substr(nm,1,3),"_13C",c(-1:(length(pikmz)-2)),sep="")
   return(paste(shQuote(paste(fi,'.CDF',sep='')),cel,trac[1],trac[2],trac[3],rep,inj,strsplit(incub,'[',fixed=T)[[1]][1],nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso,corr))
    }
 fitG <-function(x,y,mu,sig,scale){

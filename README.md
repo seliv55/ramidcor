@@ -94,7 +94,7 @@ siMID reads the CDF files presented in the working directory, and then
 1. Extraction of raw mass spectra from NetCDF files saved by a mass spectrometer, containing recordings in selected intervals of m/z. It is performed using SIMID executing the  command (default arguments are shown):
 
 ```
-  metan(infile="sw620",cdfdir="SW620/",outdir="files/")
+  metan(iinfile="sw620",cdfdir="SW620/",fiout="out.csv")
 ```
 - here the parameters are (i) the path to an input file with a short description of input data explained in detail below; (ii) the path to a directory containing the .CDF files with raw mass spectrometer data, i.e. registration of the injections into the mass spectrometer performed in the course of the given analyzed experiment; (iii) a path to the directory for the output results (extracted relative intensities for all m/z constituting the mass spectra (or mass isotopomer distributions (MID)) of the metabolites of interests).
 

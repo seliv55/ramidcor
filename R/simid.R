@@ -8,7 +8,7 @@ metan<-function(infile="../filesimid/sw620",cdfdir="../filesimid/SW620/",fiout="
    pat=".CDF"
    lcdf<-dir(path = cdfdir,pattern=pat)
    outdir="files/"
-   intab<-read.table(infile,header=T,sep=",")
+   intab<-read.table(infile,header=T,sep=" ")
 
 title<-ftitle()
 
@@ -145,7 +145,7 @@ getdistr<-function(fi,intab, tlim=100){
     a<- wphen(fi,nm,intab$Fragment[i], intab$Formula[i], intab$RT[i], pikmz,delta)
     phenom<-c(phenom,a)
 
-   archar<-paste(c(fi,nm),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm),collapse=" ")
          result<-c(result,archar)
    archar<-paste(c(nm,"peak_index:",goodpos,"c:",goodpos),collapse=" ")
          result<-c(result,archar)
@@ -160,11 +160,11 @@ getdistr<-function(fi,intab, tlim=100){
 #   archar<-paste(c(nm,"max-base:",delta),collapse=" ")
 #         result<-c(result,archar)
         if(misofin[1]!=pikmz[1]) {delta<-c(0,delta); rel<-c(0,rel)}
-   archar<-paste(c(fi,nm,maxpik,delta),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm,maxpik,delta),collapse=" ")
          res1<-c(res1,archar)
 #   archar<-paste(c(nm,"relative:",rel),collapse=" ")
 #         result<-c(result,archar)
-   archar<-paste(c(fi,nm,maxpik,rel),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm,maxpik,rel),collapse=" ")
          res2<-c(res2,archar)
     }
     
@@ -248,7 +248,7 @@ discan<-function(fi,intab, tlim=50){
                 rat<-delta/bas
                 rel<-round(delta/max(delta),4)      # normalization
     pikpos<-pikposc-piklim+pikpos-1;
-   archar<-paste(c(fi,nm),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm),collapse=" ")
          result<-c(result,archar)
    archar<-paste(c(nm,"peak_index:",pikpos,"c:",pikposc),collapse=" ")
          result<-c(result,archar)
@@ -262,11 +262,11 @@ discan<-function(fi,intab, tlim=50){
          result<-c(result,archar)
 #   archar<-paste(c(nm,"max-base:",delta),collapse=" ")
 #         result<-c(result,archar)
-   archar<-paste(c(fi,nm,maxpik,delta),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm,maxpik,delta),collapse=" ")
          res1<-c(res1,archar)
 #   archar<-paste(c(nm,"relative:",rel),collapse=" ")
 #         result<-c(result,archar)
-   archar<-paste(c(fi,nm,maxpik,rel),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm,maxpik,rel),collapse=" ")
          res2<-c(res2,archar)
             }
          }
