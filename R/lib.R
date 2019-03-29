@@ -1,3 +1,20 @@
+# ²H nat abundance 0.0115%,  mass=2.01410178,   Δ=1.006277
+# ¹H nat abundance 99.9885%, mass=1.00782503224,
+
+# ¹⁴N nat abundance 0.99636, mass=14.003074
+# ¹⁵N nat abundance 0.00368, mass=15.000109, Δ=0.997035
+
+# 12C 98.93%   mass=12.000000
+# 13C  1.1%   mass=13.003355, Δ=1.003355
+
+# 16O 99.757%  mass=15.994915
+# 17O  0.038%  mass=16.999132, Δ=1.004217
+# 18O  0.205%  mass=17.999160, Δ=2.004245
+
+# 32S  0.9493  mass=31.97207100
+# 33S  0.0076  mass=32.97145876, Δ=0.9993878
+# 34S  0.0429  mass=33.96786690, Δ=1.995796
+
 binom<-function(n){ #calculation of binomial cefficients
  bf<-numeric(n); bf[1]<-1;
  if(n>1){ for(i in 2:n) bf[i]<-bf[i-1]*i;  bc<-numeric(n); 
@@ -34,11 +51,23 @@ sulfur<-function(mc){#correction of natural mass distribution accounting for S
        m[n+2]<-mc[n]*pS2;
          m }
       
-tdist<-function(nc,nsi,ns){ #final natural mass distribution
+oxygen<-function(mc){#correction of natural mass distribution accounting for S
+  pS0<-0.99757; pS1<-0.00038; pS2<-0.00205;
+   n<-length(mc)
+    m<-numeric(n+2)
+     m[1]<-mc[1]*pS0;
+     m[2]<-mc[2]*pS0+mc[1]*pS1;
+  for(i in 3:n) m[i]<-mc[i]*pS0+mc[i-1]*pS1+mc[i-2]*pS2;
+     m[n+1]<-mc[n]*pS1+mc[n-1]*pS2;
+       m[n+2]<-mc[n]*pS2;
+         m }
+      
+tdist<-function(nc,nsi=0,ns=0,no=0){ #final natural mass distribution
    bcc<-binom(nc);
     m<-carbons(nc, bcc);
  if(nsi>0) for(i in 1:nsi)  m<-silicium(m);
  if(ns>0) for(i in 1:ns)  m<-sulfur(m);
+ if(no>0) for(i in 1:no)  m<-oxygen(m);
       m }
  
 elim<-function(msd,f1){#normalization of GCMS data accounting for the loss of protons
@@ -70,28 +99,6 @@ mdistr<-function(nreal,msd,mm,nln){ #label incorporation
       fr }
 
 
-basln<-function(vec,pos=length(vec),ofs=0){# baseline
-   bas<-mean(vec[vec<(2*min(vec))])
- return(bas*5)}
-
-readcdf<-function(fi) {
- nc <- nc_open(fi, readunlim=FALSE)  #open cdf file
-   rett<-ncvar_get( nc, "scan_acquisition_time" )
-   tiv<-ncvar_get( nc, "total_intensity" )
-   npoint<-ncvar_get( nc, "point_count" )
-     mz<-ncvar_get( nc, "mass_values" )
-     iv<-ncvar_get( nc, "intensity_values" )
-   nc_close( nc )
-        return(list(mz,iv,npoint,rett,tiv))    }
-        
-  savplt<-function(mm,mm0,nma,plname){
-  png(paste("../graf/",plname,"png",sep=""))
-  par(mfrow=c(2,1))
-   plot(mm[,2],xlim=c(nma-50,nma+50))
-   plot(mm0[,1],xlim=c(nma-50,nma+50))
-   dev.off()
-  }
-
 info<-function(mz,iv,npoint){
 #  mz,iv,npoint: mz, intensities and number mz points in every scan
       j<-1
@@ -100,7 +107,7 @@ info<-function(mz,iv,npoint){
      mzi<-numeric()  # initial value for each m/z pattern presented in the CDF file
      mzind<-numeric()# index in mz array corresponding to mzi
      mzrang<-list()  # list of mz patterns presented in the .CDF
-  mzpt[j]<-npoint[1]; tpos[j]<-1; mzi[j]<-mz[1]; imz<-1; mzind[j]<-imz
+  mzpt[1]<-npoint[1]; tpos[j]<-1; mzi[1]<-mz[1]; imz<-1; mzind[1]<-imz
   mzrang[[1]]<-mz[1:mzpt[1]];
     for(i in 2:length(npoint)) { imz<-imz+npoint[i-1];# mz index
      if(mzi[j]!=mz[imz]){  j<-j+1; tpos[j]<-i;  mzpt[j]<-npoint[i]; mzi[j]<-mz[imz];
@@ -134,6 +141,7 @@ c("Glucose","0,0,0,0,0,0",100)
       nikiso<-paste(substr(nm,1,3),"_13C",c(-1:(length(pikmz)-2)),sep="")
   return(paste(shQuote(paste(fi,'.CDF',sep='')),cel,trac[1],trac[2],trac[3],rep,inj,strsplit(incub,'[',fixed=T)[[1]][1],nm,"chebi",fragg, formul, rtt, pikmz,delta,nikiso,corr))
    }
+   
 fitG <-function(x,y,mu,sig,scale){
 # x,y: x and y values for fitting
 # mu,sig,scale: initial values for patameters to fit  
@@ -195,4 +203,130 @@ plal<-function(fi,x,me,mf){# plots intensities from matrix mm; nma - position of
   legend("topright",sleg,col = 1:length(sleg),lty=1:length(sleg))
    dev.off()
    }
+ 
+dupl<-function(vec,pos){# add element to a vector
+   vec<-c(vec[1:pos],vec[pos:length(vec)])
+ return(vec)}
+   
+basln<-function(vec,pos=length(vec),ofs=0){# baseline
+   basl<--1; basr<--1;bas<-0
+  if(pos>ofs) basl<-mean(vec[1:(pos-ofs)])
+  if(pos<(length(vec)-ofs)) basr<-mean(vec[(pos+ofs):length(vec)])
+  if((basl>0)&(basr>0)) bas<-min(basl,basr)
+  else if(basl<0) bas<-basr
+  else if(basr<0) bas<-basl
+ return(bas*5)}
+
+rmp<-function(posmz,intens,selmz,duplim=9){
+# removing elements referring to the same timepoint
+   dup<-which(diff(posmz)<duplim)
+  while(length(dup)>0){
+    intens[dup+1]<- intens[dup]+intens[dup+1]
+    intens<-intens[-dup]
+    selmz<-selmz[-dup] 
+    posmz<-posmz[-dup]
+    dup<-which(diff(posmz)<duplim)
+  } # length(posmz)
+ return(list(posmz,intens,selmz))  }
+   
+addp<-function(posmz,intens,selmz){
+# adding missing elements
+mislim<-max(diff(posmz)[diff(posmz)<700])
+   while(posmz[1]>mislim) {
+    posmz<-c(posmz[1]-mislim+9,posmz);
+    intens<-dupl(intens,1);selmz<-dupl(selmz,1)
+   }
+     mis<-which(diff(posmz)>mislim)
+   while(length(mis)>0){
+      intens<-dupl(intens,mis[1])
+      selmz<-dupl(selmz,mis[1])
+      posmz<-dupl(posmz,mis[1])
+      posmz[mis[1]+1]<-posmz[mis[1]]+mislim-2
+      mis<-which(diff(posmz)>mislim)
+   }
+ return(list(posmz,intens,selmz))  }
+ 
+psimat<-function(nr,nmass,mzpeak,ivpeak,mzz0,dmzz,lefb,rigb,ofs){
+    posmz<-matrix(nrow=nr,ncol=nmass,0);
+    intens<-matrix(nrow=nr,ncol=nmass,0);
+    selmz<-matrix(nrow=nr,ncol=nmass,0);
+ for(k in 1:nmass) {iso<-k-ofs;
+   posimz<-which((mzpeak>=(mzz0-dmzz+iso))&(mzpeak<=(mzz0+dmzz+iso))) # indexes of specific mz 
+   intensi<-ivpeak[posimz] # selection of intensities for specific mz value
+   selemz<-mzpeak[posimz] # selection of specific mz values at timepoints
+ a<-rmp(posimz,intensi,selemz)
+ a<-addp(a[[1]],a[[2]],a[[3]]);
+  if(length(a[[1]])>(rigb-5)){
+ posmz[1:(rigb-lefb+1),k]=a[[1]][lefb:(rigb)]
+ intens[1:(rigb-lefb+1),k]<-a[[2]][lefb:rigb]
+ selmz[1:(rigb-lefb+1),k]<-a[[3]][lefb:rigb]
+    }}
+  return(list(posmz,intens,selmz))}
+ 
+ 
+baseln<-function(matis){ #finds baseline
+  niso<-ncol(matis); bas<-numeric(niso)
+  for(j in 1:niso) {
+  vlim<-min(matis[,j])*1.57
+  lbas<-(matis[,j]<=vlim)
+  arbas<-(matis[,j])[lbas]
+  bas[j]<-sum(arbas)/length(arbas)
+#  matis[,j]<-round(matis[,j]-bas)
+  }
+     return(bas);}
+
+readcdf<-function(fi) {
+ nc <- nc_open(fi, readunlim=FALSE)  #open cdf file
+   rett<-ncvar_get( nc, "scan_acquisition_time" )
+   tiv<-ncvar_get( nc, "total_intensity" )
+   npoint<-ncvar_get( nc, "point_count" )
+     mz<-ncvar_get( nc, "mass_values" )
+     iv<-ncvar_get( nc, "intensity_values" )
+   nc_close( nc )
+        return(list(mz,iv,npoint,rett,tiv))    }
+        
+  savplt<-function(mm,mm0,nma,plname){
+  png(paste("../graf/",plname,"png",sep=""))
+  par(mfrow=c(2,1))
+   plot(mm[,2],xlim=c(nma-50,nma+50))
+   plot(mm0[,1],xlim=c(nma-50,nma+50))
+   dev.off()
+  }
+
+basecor<-function(intens,ima,ma){
+  pik<-intens[(ima-2):(ima+2)]
+  rest<-intens[abs((1:length(intens))-ima)>5]
+  bas<-mean(rest[rest<ma/10])
+ return (sum(pik-bas))
+}
+  
+getRtInt<-function(retal,rt,tlim=twide){
+   rts<-rt*60.; 
+   tpclose<-which.min(abs(retal-rts))  # index of timepoint closest to theoretical retention time
+   tplow<-tpclose-tlim; tpup<-tpclose+tlim # indexes of peak boundaries
+ return (list(retal[tplow:tpup],tplow))
+}       
+    
+getMzInt<-function(mzal,mzalbeg,tl,numscans,lmz,hmz,iso){
+   mzgood<-list(); isoC<-1.003355*iso
+   a<-mzalbeg[tl:(tl+numscans)]
+   posma<-which.max(diff(a))
+          a1<-(tl:(tl+numscans))[c(posma%%2==1,posma%%2==0)] # take only larger time intervals (%% is modulus)
+          # and ignore shorter ones when they follow each other
+          k<-1
+ for(i in a1){
+   mm<-which((mzal[mzalbeg[i]:mzalbeg[i+1]]>(lmz+isoC))&(mzal[mzalbeg[i]:mzalbeg[i+1]]<(hmz+isoC)))
+   if(length(mm)>0) mzgood[[k]]<-mzalbeg[i]-1+mm else mzgood[[k]]<-0.
+   k<-k+1
+  }
+ return (mzgood)
+}
+
+geIVsum<-function(iv,mzgood){
+   suiv<-numeric()
+ for(i in 1:length(mzgood)){
+   if(mzgood[[i]][1]!=0) suiv[i]<-sum(iv[mzgood[[i]]]) else suiv[i]<-0.
+  }
+ return (suiv)
+}       
 

@@ -5,7 +5,7 @@
 #metan(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",mode='scan')
 # metan(infile="../INES/ScanLacList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",mode='scan')  
  library(ncdf4)
-metan<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",mode='scan'){
+metan<-function(infile="../filesimid/sw620",cdfdir="../filesimid/SW620/",fiout="out.csv",mode='sim'){
    if(mode=='uhr') {a<-icms(); return(a)}
    start.time <- Sys.time()
    pat=".CDF"
@@ -79,61 +79,63 @@ getdistr<-function(fi,intab, tlim=100){
 #     totiv<-a[[5]]                     # sum of intensities at each rt
     a<-strsplit(strsplit(fi,".CDF")[[1]][1],"/")[[1]];
     fi<-a[length(a)]; print(fi);  phenom<-""
+#    summary: 
+ a<-info(mz,iv,npoint); mzpt<-a[[1]] # number of points in all the mz ranges
+  tpos<-a[[2]]# time points of beginning of registration corresponding mz ranges
+  mzind<-a[[3]]                      # corresponding mz indexes
+  mzrang<-a[[4]]                     # all registered mz ranges 
      rts<-intab$RT*60.; mz0<-round(intab$mz0,1); mzcon<-round(intab$control,1)
 #  search for specified metabolites
- for(imet in 1:nrow(intab)) {nm<-as.character(intab$Name[imet])
-      nmass<-3; rtdev<-15; 
-#  cutting the desired peak inside tlim
-        tpclose<-which.min(abs(rett-rts[imet]))   # index (scan number) of retention time for the peak
-        tplow<-tpclose-tlim; tpup<-tpclose+tlim-1 # time boundaries that include desired peak
-   mzi<-sum(npoint[1:tplow])+1              # index of m/z corresponding to left time boundary of peak
-   mzpik<-sum(npoint[(tplow+1):tpup])              # number of mz values inside the time boundaries
-   mzfi<-mzi+mzpik-1                        # index of m/z corresponding to right time boundary of peak
-   misoc<-c(intab$control[imet],intab$control[imet]+1,intab$control[imet]+2)  #desired mz values
-    lmisoc<-mz[mzi:mzfi] %in% misoc               # logical array indicating the positions of desired mz 
-    pic<-which(lmisoc>0)                          # array of positions of desired mz
-    if(length(pic)<3) next
-#    checking if the left boundary of actual desired mz registration < tlim
-    ibmz<-npoint[tplow+1]; ibmz0<-0; i<-1;
-    beg<-pic[1];
-    while(ibmz<beg) { i<-i+1; ibmz0<-ibmz; ibmz<-ibmz+npoint[tplow+i]}
-    tplow<-tplow+i-1; mzi<-mzi+ibmz0; tpclose<-tlim-i+1
-#    checking if the right boundary of actual desired mz registration < tlim
-    ifmz0<-length(mz[mzi:mzfi]); ifmz<-ifmz0-npoint[tpup-1]
-    fin<-pic[length(pic)]; i<-1
-    while(ifmz>fin) { i<-i+1; ifmz0<-ifmz; ifmz<-ifmz-npoint[tpup-i]} 
-    tpup<-tpup-i+1; mzfi<-mzi+ifmz0-1
-#    putting the intensities of desired mz into a matrix (scan number, mz)    
-    lmisoc<-mz[mzi:mzfi] %in% misoc               # logical array indicating the positions of desired mz 
-    pic<-which(lmisoc>0)                          # array of positions of desired mz
+ for(i in 1:nrow(intab)) {nm<-as.character(intab$Name[i])
+        ltp<- rts[i]<rett[tpos]         # time interval that includes rts
+        ranum<-(c(1:length(tpos))[ltp])[1]-1
+        ranum[is.na(ranum)]<-0; if(ranum<1) next
+        mzrang[[ranum]]<-round(mzrang[[ranum]],1)
+   if((mz0[i] %in% mzrang[[ranum]])&(mzcon[i] %in% mzrang[[ranum]])) {
+#   check whether mid for a given metabolite is presented in the found time interval
+        tpclose<-which.min(abs(rett-rts[i]))
+#        tlim<-min(tlim,tpclose-tpos[ranum],tpos[ranum+1]-tpclose)
+        tplow<-max(tpclose-tlim,tpos[ranum]); tpup<-min(tpclose+tlim,tpos[ranum+1])     # boundaries that include desired peak
+#   mzi<-mzind[ranum]+mzpt[ranum]*(tplow-tpos[ranum])#index of initial mz point
+   mzi<-mzind[ranum]+sum(npoint[tpos[ranum]:tplow])-npoint[tpos[ranum]]
+#   mzfi<-mzi+mzpt[ranum]*(tpup-tplow)   	#index of final mz point
+   mzfi<-mzi+sum(npoint[tplow:tpup])-npoint[tplow]
+   rtpeak<-rett[tplow:tpup] # retention times within the boundaries
+        tpclose<-which.min(abs(rtpeak-rts[i]))
+# additional peak
+      nmass<-3; rtdev<-15;
+    misoc<-c(intab$control[i],intab$control[i]+1,intab$control[i]+2)#desired mz values
+    lmisoc<-mzrang[[ranum]] %in% misoc
     intens<-matrix(ncol=nmass,nrow=(tpup-tplow),0)
     intens<-sweep(intens,2,iv[mzi:mzfi][lmisoc],'+')
-#    determine positions of peaks for each mz, their intensities and the most correct position
     pospiks<-apply(intens,2,which.max)
     pikintc<-apply(intens,2,max)
-    if(max(abs(diff(pospiks)))>9) goodiso<-which.min(abs(pospiks-tpclose))  else goodiso<-which.max(pikintc)
+   if(max(abs(diff(pospiks)))>9) goodiso<-which.min(abs(pospiks-tpclose))  else goodiso<-which.max(pikintc)
         pikposc<-pospiks[goodiso]
         
-  if(abs(rett[pikposc]-rett[tpclose])<10) { # actual rt deviates from the expected in < 10 sec.
-    maxpikc<-pikintc[goodiso]
+  if(abs(rtpeak[pikposc]-rtpeak[tpclose])<10) {
+        maxpikc<-pikintc[goodiso]
     for(k in 1:nmass) pikintc[k]<-sum(intens[(pikposc-2):(pikposc+2),k])
       basc<-apply(intens,2,basln,pos=pikposc,ofs=11)
                 deltac<-round(pikintc-basc)
                 ratc<-deltac/basc
 # main peak
-   if(ratc[goodiso]>3){ frag<-as.character(intab$Fragment[imet])
+  if(ratc[goodiso]>3){ frag<-as.character(intab$Fragment[i])
      frpos<-gregexpr("C[0-9]",frag)[[1]]+1
-     c1=as.numeric(substr(frag,frpos[1],frpos[1]));  c2=as.numeric(substr(frag,frpos[2],nchar(frag)))
-     nCfrg<-c2-c1+1
-     nmass<-nCfrg+5       # number of desired isotopomers calculated from formula
-    misodes<-array((mz0[imet]-1):(mz0[imet]+nmass-2)) # desired isotopomers 
-    lmiso<-misodes %in% mz[mzi:(mzi+npoint[tplow+1])] # do they actually present?
-    miso<-misodes[lmiso]                              # actually presented isotopomers
-    lalmiso<-mz[mzi:mzfi] %in% miso # right positions of actually presented isotopomers
-    
-    nmass<-length(miso) 
+      c1=as.numeric(substr(frag,frpos[1],frpos[1]));  c2=as.numeric(substr(frag,frpos[2],nchar(frag)))
+   nCfrg<-c2-c1+1
+#                   a<-as.character(intab$Formula[i])
+#          Cpos<-regexpr("C",a); Hpos<-regexpr("H",a); Spos<-regexpr("S",a); Sipos<-regexpr("Si",a)
+#    nCder<-as.numeric(substr(a,Cpos+1,Hpos-1))
+#    if(Sipos>0) nSi<-as.numeric(substr(a,Sipos+2,Sipos+2)) else nSi<-0
+#    if((Spos>0)&(Spos!=Sipos)) nS<-as.numeric(substr(a,Spos+1,Spos+1)) else nS<-0
+        nmass<-nCfrg+5 # number of isotopomers to present calculated from formula
+    misofin<-array((mz0[i]-1):(mz0[i]+nmass-2)) # isotopores to present in the spectrum
+    lmisofin<-mzrang[[ranum]] %in% misofin # do they are present in the given mzrang?
+    pikmz<-mzrang[[ranum]][lmisofin] # extrat those that are present
+    nmass<-length(pikmz)
     intens<-matrix(ncol=nmass,nrow=(tpup-tplow),0)
-    intens<-sweep(intens,2,iv[mzi:mzfi][lalmiso],'+') # create matrix iv(col=mz,row=rt) that includes the peak
+    intens<-sweep(intens,2,iv[mzi:mzfi][lmisofin],'+') # create matrix iv(col=mz,row=rt) that includes the peak
 
     pospiks<-apply(intens,2,which.max)
     difpos<-abs(pikposc - pospiks)
@@ -147,13 +149,13 @@ getdistr<-function(fi,intab, tlim=100){
      if((goodpos>2)&(goodpos<(nrow(intens)-2))){
        for(k in 1:nmass) pikint[k]<-sum(intens[(goodpos-2):(goodpos+2),k]) }
      delta<-round(pikint-bas); s5tp<-"5_timepoints:"
-    if((delta[1]/delta[2] > 0.075)) { s5tp<-"*!?* 5_timepoints:";
+    if((misofin[1]==pikmz[1])&(delta[1]/delta[2] > 0.075)) { s5tp<-"*!?* 5_timepoints:";
       print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); break }
           
                 rat<-delta/bas
                 rel<-round(delta/max(delta),4)      # normalization
 
-    a<- wphen(fi,nm,intab$Fragment[imet], intab$Formula[imet], intab$RT[imet], miso,delta)
+    a<- wphen(fi,nm,intab$Fragment[i], intab$Formula[i], intab$RT[i], pikmz,delta)
     phenom<-c(phenom,a)
 
    archar<-paste(c(gsub(' ','_',fi),nm),collapse=" ")
@@ -162,7 +164,7 @@ getdistr<-function(fi,intab, tlim=100){
          result<-c(result,archar)
    archar<-paste(c(nm,smaxpik,maxpik,"c:",maxpikc),collapse=" ") 
          result<-c(result,archar)
-   archar<-paste(c(nm,"mz:",miso,"c:",misoc),collapse=" ")
+   archar<-paste(c(nm,"mz:",pikmz,"c:",misoc),collapse=" ")
          result<-c(result,archar)
    archar<-paste(c(nm,s5tp,pikint,"c:",pikintc),collapse=" ")
          result<-c(result,archar)
@@ -170,6 +172,7 @@ getdistr<-function(fi,intab, tlim=100){
          result<-c(result,archar)
 #   archar<-paste(c(nm,"max-base:",delta),collapse=" ")
 #         result<-c(result,archar)
+        if(misofin[1]!=pikmz[1]) {delta<-c(0,delta); rel<-c(0,rel)}
    archar<-paste(c(gsub(' ','_',fi),nm,maxpik,delta),collapse=" ")
          res1<-c(res1,archar)
 #   archar<-paste(c(nm,"relative:",rel),collapse=" ")
@@ -178,39 +181,35 @@ getdistr<-function(fi,intab, tlim=100){
          res2<-c(res2,archar)
     }
     
-#     { }      else miso<-c(0,miso)
+#     { }      else pikmz<-c(0,pikmz)
                 }
               }
+           }
            }
  return(list(result,res1,res2,phenom))}     
  
 discan<-function(fi,intab, tlim=50){
 # fi: file name
 # intab: parameters of metabolite (mz for m0, retention time)
-    a<-readcdf(fi); 
+    a<-readcdf(fi);
      result<-character(); res1<-character(); res2<-character()
-     mz<-round(a[[1]],1); iv<-a[[2]]   # all mz and respecive intensities
+     mz<-a[[1]]; iv<-a[[2]]   # sets of mz and respecive intensities at each rt
      npoint<-a[[3]];      rett<-a[[4]] # number of mz points and respective rt
 #     totiv<-a[[5]]                     # sum of intensities at each rt
     a<-strsplit(strsplit(fi,".CDF")[[1]][1],"/")[[1]];
     fi<-a[length(a)]; print(fi);  phenom<-""
+     mzbeg<-which(diff(mz)<0)+1; dmz=0.49  # index of beginning of mz scan interval for each timepoint
      rts<-intab$RT*60.; mz0<-round(intab$mz0,1); mzcon<-round(intab$control,1)
-#     totiv<-a[[5]]                     # sum of intensities at each rt
-      dmz=0.49  # index of beginning of mz scan interval for each timepoint
 #  search for specified metabolites
- for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){nm<-as.character(intab$Name[imet])
-   tpclose<-which.min(abs(rett-rts[imet]))  # index of timepoint closest to theoretical retention time
+ for(i in 1:nrow(intab)) if(max(rett)>rts[i]){nm<-as.character(intab$Name[i])
+   tpclose<-which.min(abs(rett-rts[i]))  # index of timepoint closest to theoretical retention time
    tplow<-tpclose-tlim; tpup<-tpclose+tlim # indexes of peak boundaries
+   mzpeak<-mz[mzbeg[tplow]:mzbeg[tpup]] # all mz between the timepoints limiting the peak
+   ivpeak<-iv[mzbeg[tplow]:mzbeg[tpup]] # all intensity between the timepoints limiting the peak
    rtpeak<-rett[tplow:tpup] # retention times within the boundaries
-
-   mzi<-sum(npoint[1:tplow])+1              # index of m/z corresponding to left time boundary of peak
-   mzpik<-sum(npoint[(tplow+1):tpup])              # number of mz values inside the time boundaries
-   mzfi<-mzi+mzpik-1                        # index of m/z corresponding to right time boundary of peak
 # additional peak
-   mzpeak<-mz[mzi:mzfi] # all mz between the timepoints limiting the peak
-   ivpeak<-iv[mzi:mzfi] # all intensity between the timepoints limiting the peak
       nmass<-3; rtdev<-15; intens<-matrix(); selmz<-matrix()
-   a<-psimat(nr=(length(rtpeak)+2), nmass, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=length(rtpeak)-1, ofs=1)
+   a<-psimat(nr=(length(rtpeak)+2),nmass,mzpeak,ivpeak,mzz0=mzcon[i],dmzz=dmz,lefb=1,rigb=length(rtpeak)-1,ofs=1)
     intens<-a[[2]]; selmz<-a[[3]]; intens[is.na(intens)]<-0; selmz[is.na(selmz)]<-0;
   pikmzc<-numeric(); 
     pikintc<-apply(intens,2,max)
@@ -226,17 +225,17 @@ discan<-function(fi,intab, tlim=50){
                 ratc<-round(pikintc-basc)/basc
 # main peak
   if(ratc[goodiso]>9){  piklim<-9
-        a<-as.character(intab$Fragment[imet])
+        a<-as.character(intab$Fragment[i])
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
     nmass <-nCfrg+5 # number of isotopores to present calculated from formula
-#        a<-as.character(intab$Formula[imet])
+#        a<-as.character(intab$Formula[i])
 #     Cpos<-regexpr("C",a);  Hpos<-regexpr("H",a)
 #     Spos<-regexpr("S",a); Sipos<-regexpr("Si",a)
 #    nCder<-as.numeric(substr(a,Cpos+1,Hpos-1))
 #    if(Sipos>0) nSi<-as.numeric(substr(a,Sipos+2,Sipos+2)) else nSi<-0
 #    if((Spos>0)&(Spos!=Sipos)) nS<-as.numeric(substr(a,Spos+1,Spos+1)) else nS<-0
 #       tit1<-paste("m",c(1:nmass),sep="")
-    a<-psimat(nr=(2*piklim+1),nmass,mzpeak,ivpeak,mzz0=mz0[imet],dmzz=dmz,lefb=(pikposc-piklim),rigb=(pikposc+piklim),ofs=2)
+    a<-psimat(nr=(2*piklim+1),nmass,mzpeak,ivpeak,mzz0=mz0[i],dmzz=dmz,lefb=(pikposc-piklim),rigb=(pikposc+piklim),ofs=2)
     intens<-a[[2]]; selmz<-a[[3]];
 #	lapply(intens,length)
     pikint<-apply(intens,2,max)
@@ -253,7 +252,7 @@ discan<-function(fi,intab, tlim=50){
    }
     delta<-round(pikint-bas); s5tp<-"5_timepoints:"
      if(delta[1]/delta[2] > 0.05) { s5tp<-"*!?* 5_timepoints:"; print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm))}
-    a<- wphen(fi,nm,intab$Fragment[imet], intab$Formula[imet], intab$RT[imet], pikmz,delta)
+    a<- wphen(fi,nm,intab$Fragment[i], intab$Formula[i], intab$RT[i], pikmz,delta)
     phenom<-c(phenom,a)
                 rat<-delta/bas
                 rel<-round(delta/max(delta),4)      # normalization
@@ -281,7 +280,7 @@ discan<-function(fi,intab, tlim=50){
             }
          }
        } # if additional peak exists
-     } # change of metabolite (imet)
+     } # change of metabolite (i)
  return(list(result,res1,res2,phenom))}
   
 icms<-function(infile="tere1",cdfile='teresa/Refsample_12C_Glucose_ICMS.cdf',fiout="out"){
@@ -292,36 +291,36 @@ icms<-function(infile="tere1",cdfile='teresa/Refsample_12C_Glucose_ICMS.cdf',fio
    ret<-ncvar_get( nc, "scan_acquisition_time" )
    twide<-50
    rett<-list();
-   for(imet in 1:nrow(intab)) rett[[imet]]<-getRtInt(retal=ret,rt=intab$RT[imet],tlim=twide)
+   for(i in 1:nrow(intab)) rett[[i]]<-getRtInt(retal=ret,rt=intab$RT[i],tlim=twide)
    remove(ret)
    mzz<-ncvar_get( nc, "mass_values" )
    mzbeg<-which(diff(mzz)<0)+1 # index of beginning of mz scan interval for each timepoint
    mzpos<-list(); nCfrg<-numeric()
-   for(imet in 1:nrow(intab)){
-     frag<-as.character(intab$Fragment[imet]) # string of fragnent name
+   for(i in 1:nrow(intab)){
+     frag<-as.character(intab$Fragment[i]) # string of fragnent name
      frpos<-gregexpr("C[0-9]",frag)[[1]]+1 # C-positions in the fragment
      c1=as.numeric(substr(frag,frpos[1],frpos[1]));  c2=as.numeric(substr(frag,frpos[2],nchar(frag)))
-     nCfrg[imet]<-c2-c1+2 # number of carbons in fragment
+     nCfrg[i]<-c2-c1+2 # number of carbons in fragment
      isopos<-list();
-     for(j in 1:nCfrg[imet]) # get valid mz for the selected scans and mass isotopomers
-       isopos[[j]]<-getMzInt(mzal=mzz,mzalbeg=mzbeg,tl=rett[[imet]][[2]],numscans=twide*2,lmz=intab[imet,3], hmz=intab[imet,4],iso=(j-1))
-     mzpos[[imet]]<-isopos
+     for(j in 1:nCfrg[i]) # get valid mz for the selected scans and mass isotopomers
+       isopos[[j]]<-getMzInt(mzal=mzz,mzalbeg=mzbeg,tl=rett[[i]][[2]],numscans=twide*2,lmz=intab[i,3], hmz=intab[i,4],iso=(j-1))
+     mzpos[[i]]<-isopos
    }
    remove(mzz)
    ival<-ncvar_get( nc, "intensity_values" )
    peaks<-list(); ivabs<-list();  ivrel<-list(); alinfo<-character()
-   for(imet in 1:nrow(intab)) {
+   for(i in 1:nrow(intab)) {
       peak<-list(); disabs<-numeric(); disrel<-numeric();
-      for(j in 1:nCfrg[imet]) {
-      peak[[j]]<-round(geIVsum(iv=ival,mzgood=mzpos[[imet]][[j]]))
+      for(j in 1:nCfrg[i]) {
+      peak[[j]]<-round(geIVsum(iv=ival,mzgood=mzpos[[i]][[j]]))
       ima<-which.max(peak[[j]]);  ma<-peak[[j]][ima]
       if((ima<7)|(ima>twide-7)){disabs[j]<-0; next} 
           disabs[j]<-basecor(peak[[j]],ima,ma) # correct for baseline
           alinfo<-paste(c(alinfo,j-1,'#',ima,':',ma,'\n'),collapse=" ")
       } # sum of intensities for good mz 
-      disabs[is.na(disabs)]<-0; ivabs[[imet]]<-c(as.character(intab[imet,1]),round(disabs))
-      sabs<-sum(disabs); disrel<-disabs/sabs; ivrel[[imet]]<-c(as.character(intab[imet,1]),round(disrel,4))
-      peaks[[imet]]<-peak; alinfo<-paste(c(alinfo,ivabs[[imet]],'\n',ivrel[[imet]],'\n\n'),collapse=" ")
+      disabs[is.na(disabs)]<-0; ivabs[[i]]<-c(as.character(intab[i,1]),round(disabs))
+      sabs<-sum(disabs); disrel<-disabs/sabs; ivrel[[i]]<-c(as.character(intab[i,1]),round(disrel,4))
+      peaks[[i]]<-peak; alinfo<-paste(c(alinfo,ivabs[[i]],'\n',ivrel[[i]],'\n\n'),collapse=" ")
    }
    remove(ival)
         write(alinfo,fiout)
