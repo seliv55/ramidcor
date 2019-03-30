@@ -1,10 +1,9 @@
 Package:simid
-Title: Initiation of workflow of metabolites mass spectra analysis from raw time cource saved in CDF files.
+Title: Initiation of workflow of metabolites mass spectra analysis from raw time cource saved in CDF files
 Version: 0.0.1.0
 Authors@R: person("Vitaly", "Selivanov", email = "selivanov@ub.edu", role = c("aut", "cre"))
 Description: Extracting mass spectra of metabolies at the moment of their peak from raw time cource saved in CDF files.
 Depends: R (>= 3.0.0)
-Imports: ncdf4
-License:
+License: asdfgh
 Encoding: UTF-8
 LazyData: true
