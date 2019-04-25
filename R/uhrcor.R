@@ -26,8 +26,8 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
        return(list(ff,xisq,fr))
 }
 
-rumidcor<-function(infile="SimLacList.csv",dadir="../files/KO_Hypoxia_SCAN.AIA/"){
-   intab<-read.table(infile,header=T,sep=" "); phenom<-""
+rumidcor<-function(infile="tere1",nocorfi="out"){
+   intab<-read.table(infile,header=T); phenom<-""
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
