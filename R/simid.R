@@ -2,11 +2,12 @@
 # oldi<-getwd()
 #  source(infile)
 # print(infile)
-#metan(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",mode='scan')
-# metan(infile="../INES/ScanLacList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",mode='scan')  
+#metan(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan')
+# metan(infile="../INES/ScanList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",md='scan')  
+# metan(infile="../INES/SimList.csv",cdfdir="../INES/PIM/Parental_Hypoxia/Parental_Hypoxia_SIMLAC.AIA/",fiout="out.csv",md='sim')
  library(ncdf4)
-metan<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",mode='scan'){
-   if(mode=='uhr') {a<-icms(); return(a)}
+metan<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan'){
+   if(md=='uhr') {a<-icms(); return(a)}
    start.time <- Sys.time()
    pat=".CDF"
    lcdf<-dir(path = cdfdir,pattern=pat)
@@ -17,7 +18,7 @@ title<-ftitle()
 
      df0<-data.frame(); # data frame to write Ramid output in PhenoMeNal format
      res<-character(); res1<-character(); res2<-character(); phen<-""
-     if(mode=='scan') for(fi in lcdf){
+     if(md=='scan') for(fi in lcdf){
                                     fi<-paste(cdfdir,fi, sep="")
                                     a <-discan(fi,intab) 
                                     res<-c(res,a[[1]])
@@ -148,7 +149,7 @@ getdistr<-function(fi,intab, tlim=100){
        for(k in 1:nmass) pikint[k]<-sum(intens[(goodpos-2):(goodpos+2),k]) }
      delta<-round(pikint-bas); s5tp<-"5_timepoints:"
     if((delta[1]/delta[2] > 0.075)) { s5tp<-"*!?* 5_timepoints:";
-      print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); break }
+      print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); next }
           
                 rat<-delta/bas
                 rel<-round(delta/max(delta),4)      # normalization
