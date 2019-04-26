@@ -328,5 +328,22 @@ geIVsum<-function(iv,mzgood){
    if(mzgood[[i]][1]!=0) suiv[i]<-sum(iv[mzgood[[i]]]) else suiv[i]<-0.
   }
  return (suiv)
-}       
+} 
+      
+msdlist<-function(trati){nln<-length(trati)
+        ntrati<-lapply(strsplit(trati, " "),as.numeric)
+        lnumv<-!lapply(ntrati,is.na)[[1]]
+        mdis<-matrix(ncol=length(ntrati[[1]][lnumv]),nrow=nln,0)
+        mdis[1,]<-ntrati[[1]][lnumv]
+      if(nln>1)for(i in 2:nln){
+        lnumv<-!lapply(ntrati,is.na)[[i]]
+        mdis[i,]<-ntrati[[i]][lnumv]
+      } 
+        mval<-round(apply(mdis,2,mean),4)
+        sdv<-round(apply(mdis,2,sd),3)
+ return(list(mval,sdv))}
+ 
+ vybor<-function(spis,obr){
+ 	lspis<-grepl(obr,spis)
+ return(spis[lspis]) }
 
