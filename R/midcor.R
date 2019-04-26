@@ -104,3 +104,33 @@ if(length(lcon)>0){
     phen<-c(phen,a)
   }
 return(phen)}
+
+ isoform<-function(isofi='../filesimid/files/toIsodyn',dadir='../cdf2mid/files/cdfcase3/',marca=2){
+        a<-readLines(isofi)
+# basic data:  
+  fnam<-strsplit(a[1],' ')[[1]] # metabolite(file) name
+  tinc<-strsplit(a[2],' ')[[1]] # incubation times
+  trac<-strsplit(a[3],' ')[[1]] # tracer used
+   trr<-trac[marca]; metm<-paste(c(tinc),collapse=" ")
+    tmp4<-paste(c('tracer',a[marca+2]),collapse=" ")
+   
+ for(met in fnam[2:length(fnam)]){
+   a<-readLines(paste(dadir,strsplit(met,',')[[1]][1],'.txt',sep=''))
+   beg<-grep(' corrected',a)
+   suba<-a[beg[length(beg)]:length(a)]
+     tr<-vybor(suba,trr) #select tracer
+  if(length(tr)>0){
+  metm<-c(metm,paste("name:",met));
+   for(tii in tinc[2:length(tinc)]){
+      tm<-paste(tii,'h',sep="")
+      ttr<-vybor(tr,tm) #select incubation time
+  if(length(ttr)>0){
+  a<-msdlist(ttr)
+        tmp2<-paste(c("t=",tii,"mean:",a[1][[1]],sum(a[1][[1]])),collapse=" ")
+        tmp3<-paste(c("sd:",a[2][[1]]),collapse=" ")
+        tmp3<-gsub("NA","0",tmp3)
+        metm<-c(metm,tmp2,tmp3)
+  }   }  } }
+        metm<-c(metm,tmp4)
+  write(noquote(metm),paste(dadir,"mark",marca,sep=""))
+   return (metm)}
