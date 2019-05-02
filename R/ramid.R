@@ -231,14 +231,12 @@ discan<-function(fi,intab, tlim=20){
     isomaxc<-which.max(pikvalc)
     pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim),isomaxc])
   if(abs(pikposc-piklim)>3) next
-       maxpikm<-intens[pikposm,isomaxm]
+       maxpikm<-intensm[pikposm,isomaxm]
    for(k in 1:nmassm) {
-   pikmzc[k]<-selmz[pikposc,k] # peak mz
+   pikmz[k]<-selmz[pikposm,k] # peak mz
    pikintc[k]<-sum(intens[(pikposc-2):(pikposc+2),k])}
       basc<-apply(intens,2,basln,pos=pikposc,ofs=5)
                 ratc<-round(pikintc-basc)/basc
-#    a<-psimat(nr=(2*piklim+1),nmass,mzpeak,ivpeak,mzz0=mz0[imet],dmzz=dmz,lefb=(pikposc-piklim),rigb=(pikposc+piklim),ofs=2)
-#	lapply(intens,length)
     pikint<-apply(intens,2,max)
     isomax<-which.max(pikint)
     pikpos<-which.max(intens[,isomax])
