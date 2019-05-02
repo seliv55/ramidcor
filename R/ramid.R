@@ -1,6 +1,6 @@
 #  setwd(oldi)
 # oldi<-getwd()
-#  source(infile)
+#  source('R/lib.R')
 # print(infile)
 #ramid(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan')
 # ramid(infile="../INES/ScanList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",md='scan')  
@@ -20,8 +20,8 @@ title<-ftitle()
 
      df0<-data.frame(); # data frame to write Ramid output in PhenoMeNal format
      res<-character(); res1<-character(); res2<-character(); phen<-""
-     if(md=='scan') for(fi in lcdf){
-                                    fi<-paste(cdfdir,fi, sep="")
+     if(md=='scan') for(fi in lcdf){ # fi <- lcdf[1]
+                                    fi<-paste(cdfdir,fi, sep="")#fi1<-fi
                                     a <-discan(fi,intab) 
                                     res<-c(res,a[[1]])
                                     res1<-c(res1,a[[2]])
@@ -201,7 +201,8 @@ discan<-function(fi,intab, tlim=20){
 #     totiv<-a[[5]]                     # sum of intensities at each rt
       dmz=0.49  # index of beginning of mz scan interval for each timepoint
 #  search for specified metabolites
- for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){nm<-as.character(intab$Name[imet])
+ for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){#imet<-23
+   nm<-as.character(intab$Name[imet])
    itpeak<-which(abs(rett-rts[imet])<tlim)  # index of timepoint closest to theoretical retention time
    ltpeak<-length(itpeak)
    tpeak<-rett[itpeak]
@@ -211,31 +212,32 @@ discan<-function(fi,intab, tlim=20){
    imzfi<-imzi+imzpik-1                     # index of m/z corresponding to right time boundary of peak
    mzpeak<-mz[imzi:imzfi] # all mz between the timepoints limiting the peak
    ivpeak<-iv[imzi:imzfi] # all intensity between the timepoints limiting the peak 
-   intens<-matrix(); selmz<-matrix()
-# additional peak
-      nmass<-3; rtdev<-15;
-   a<-psimat(nr=ltpeak, nmass, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
-    intens<-a[[2]]; selmz<-a[[3]]; intens[is.na(intens)]<-0; selmz[is.na(selmz)]<-0;
-  pikmzc<-numeric(); 
-    pikintc<-apply(intens,2,max)
-    pospiks<-apply(intens,2,which.max)
-   if(max(abs(diff(pospiks)))>9) goodiso<-which.min(abs(pospiks-tlim))  else goodiso<-which.max(pikintc)
-        pikposc<-which.max(intens[,goodiso])
-  if(abs(tpeak[pikposc]-rts[imet])<rtdev) {
-       maxpikc<-intens[pikposc,goodiso]
-   for(k in 1:nmass) {
+# main peak
+   intensm<-matrix(); selmzm<-matrix();
+        a<-as.character(intab$Fragment[imet])
+    nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
+    nmassm <-nCfrg+4 # number of isotopores to present calculated from formula
+   a<-psimat(nr=ltpeak, nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
+    intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
+    pikvalm<-apply(intensm,2,max)
+    isomaxm<-which.max(pikvalm)
+    pikposm<-which.max(intensm[,isomaxm])
+# control peak
+   intensc<-matrix(); selmzc<-matrix(); piklim<-9
+      nmassc<-nCfrg; rtdev<-15;
+   a<-psimat(nr=ltpeak, nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
+    intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
+    pikvalc<-apply(intensc[(pikposm-piklim):(pikposm+piklim),],2,max)
+    isomaxc<-which.max(pikvalc)
+    pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim),isomaxc])
+  if(abs(pikposc-piklim)>3) next
+       maxpikm<-intens[pikposm,isomaxm]
+   for(k in 1:nmassm) {
    pikmzc[k]<-selmz[pikposc,k] # peak mz
    pikintc[k]<-sum(intens[(pikposc-2):(pikposc+2),k])}
       basc<-apply(intens,2,basln,pos=pikposc,ofs=5)
                 ratc<-round(pikintc-basc)/basc
-# main peak
-  if(ratc[goodiso]>9){  piklim<-9
-        a<-as.character(intab$Fragment[imet])
-    nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
-    nmass <-nCfrg+5 # number of isotopores to present calculated from formula
-   a<-psimat(nr=ltpeak, nmass, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
 #    a<-psimat(nr=(2*piklim+1),nmass,mzpeak,ivpeak,mzz0=mz0[imet],dmzz=dmz,lefb=(pikposc-piklim),rigb=(pikposc+piklim),ofs=2)
-    intens<-a[[2]]; selmz<-a[[3]]; intens[is.na(intens)]<-0; selmz[is.na(selmz)]<-0;
 #	lapply(intens,length)
     pikint<-apply(intens,2,max)
     isomax<-which.max(pikint)
@@ -277,8 +279,6 @@ discan<-function(fi,intab, tlim=20){
    archar<-paste(c(gsub(' ','_',fi),nm,maxpik,rel),collapse=" ")
          res2<-c(res2,archar)
             }
-         }
-       } # if additional peak exists
      } # change of metabolite (imet)
  return(list(result,res1,res2,phenom))}
   
