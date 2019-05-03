@@ -121,7 +121,7 @@ getdistr<-function(fi,intab, tlim=100){
     maxpikc<-pikintc[goodiso]
     for(k in 1:nmass) pikintc[k]<-sum(intens[(pikposc-2):(pikposc+2),k])
       basc<-apply(intens,2,basln,pos=pikposc,ofs=11)
-                deltac<-round(pikintc-basc)
+                deltac<-round(pikintc-basc*5)
                 ratc<-deltac/basc
 # main peak
    if(ratc[goodiso]>3){ frag<-as.character(intab$Fragment[imet])
@@ -149,7 +149,7 @@ getdistr<-function(fi,intab, tlim=100){
      bas<-apply(intens,2,basln,pos=goodpos,ofs=11)
      if((goodpos>2)&(goodpos<(nrow(intens)-2))){
        for(k in 1:nmass) pikint[k]<-sum(intens[(goodpos-2):(goodpos+2),k]) }
-     delta<-round(pikint-bas); s5tp<-"5_timepoints:"
+     delta<-round(pikint-bas*5); s5tp<-"5_timepoints:"
     if((delta[1]/delta[2] > 0.075)) { s5tp<-"*!?* 5_timepoints:";
       print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm)); next }
           
@@ -190,6 +190,8 @@ getdistr<-function(fi,intab, tlim=100){
 discan<-function(fi,intab, tlim=20){
 # fi: file name
 # intab: parameters of metabolite (mz for m0, retention time)
+    limsens<-8000000
+
     a<-readcdf(fi); 
      result<-character(); res1<-character(); res2<-character()
      mz<-round(a[[1]],1); iv<-a[[2]]   # all mz and respecive intensities
@@ -218,65 +220,67 @@ discan<-function(fi,intab, tlim=20){
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
     nmassm <-nCfrg+4 # number of isotopores to present calculated from formula
    a<-psimat(nr=ltpeak, nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
-    intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
-    pikvalm<-apply(intensm,2,max)
-    isomaxm<-which.max(pikvalm)
-    pikposm<-which.max(intensm[,isomaxm])
+      intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
+      pikvalm<-apply(intensm,2,max)
+      isomaxm<-which.max(pikvalm)
+      pikposm<-which.max(intensm[,isomaxm])
 # control peak
    intensc<-matrix(); selmzc<-matrix(); piklim<-9
-      nmassc<-nCfrg; rtdev<-15;
+      nmassc<-nCfrg
    a<-psimat(nr=ltpeak, nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
-    pikvalc<-apply(intensc[(pikposm-piklim):(pikposm+piklim),],2,max)
-    isomaxc<-which.max(pikvalc)
-    pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim),isomaxc])
+#     if((pikposm<piklim)|((pikposm+piklim)>ltpeak)) next
+    if(nmassc>1){
+        pikvalc<-apply(intensc[(pikposm-piklim):(pikposm+piklim),1:nmassc],2,max)
+        isomaxc<-which.max(pikvalc)
+    } else {pikvalc<-max(intensc[(pikposm-piklim):(pikposm+piklim),1:nmassc])
+     isomaxc<-1;
+    }
+        pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim),isomaxc])
+       maxpikc<-intensc[pikposm,isomaxc]
   if(abs(pikposc-piklim)>3) next
        maxpikm<-intensm[pikposm,isomaxm]
-   for(k in 1:nmassm) {
-   pikmz[k]<-selmz[pikposm,k] # peak mz
-   pikintc[k]<-sum(intens[(pikposc-2):(pikposc+2),k])}
-      basc<-apply(intens,2,basln,pos=pikposc,ofs=5)
-                ratc<-round(pikintc-basc)/basc
-    pikint<-apply(intens,2,max)
-    isomax<-which.max(pikint)
-    pikpos<-which.max(intens[,isomax])
-    maxpik<-intens[pikpos,isomax];  smaxpik<-"max_peak:";
-     if(maxpik>8000000) {smaxpik<-"**** !?MAX_PEAK:"; print(paste("** max=",maxpik,"   ",nm,"   **"))}
-    bas<-apply(intens,2,basln,pos=pikpos,ofs=5)
-  if((pikpos>2)&(pikpos<(nrow(intens)-2))){
-      pikmz<-numeric(); 
-     for(k in 1:nmass) {
-     pikmz[k]<-round(selmz[pikpos,k]) # peak mz
-     pikint[k]<-sum(intens[(pikpos-2):(pikpos+2),k])
+       ilim=0
+  if(maxpikm>limsens) {ilim=ilim+1; while(intensm[pikposm+ilim,isomaxm]>limsens) ilim=ilim+1}
+  print(ilim)
+     pikposr<-pikposm+ilim;  pikmzm<-numeric(); pikintm<-numeric();  basm<-numeric()
+  for(k in 1:nmassm) {
+      pikmzm[k]<-selmzm[pikposm,k] # peak mz
+      if(maxpikm>limsens) pikintm[k]<-((intensm[(pikposm-1),k]+intensm[pikposr,k]))/2 else
+      pikintm[k]<- sum(intensm[(pikposm-2):(pikposm+2),k])/5
    }
-    delta<-round(pikint-bas); s5tp<-"5_timepoints:"
-     if(delta[1]/delta[2] > 0.05) { s5tp<-"*!?* 5_timepoints:"; print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm))}
-    a<- wphen(fi,nm,intab$Fragment[imet], intab$Formula[imet], intab$RT[imet], pikmz,delta)
+      basm<-apply(intensm,2,basln,pos=pikposm,ofs=9)
+  delta<-round(pikintm-basm)
+       smaxpik<-"max_peak:";
+  if(maxpikm>limsens) {smaxpik<-"**** !?MAX_PEAK:"; print(paste("** max=",maxpikm,"   ",nm,"   **"))}
+        s5tp<-"5_timepoints:"
+  if(delta[1]/delta[2] > 0.05) { s5tp<-"*!?* 5_timepoints:"; 
+      print(paste("+++ m-1=",delta[1],"  m0= ",delta[2],"   +++ ",nm))}
+    a<- wphen(fi,nm,intab$Fragment[imet], intab$Formula[imet], intab$RT[imet], pikmzm,delta)
     phenom<-c(phenom,a)
-                rat<-delta/bas
+                rat<-delta/basm
                 rel<-round(delta/max(delta),4)      # normalization
-    pikpos<-pikposc-piklim+pikpos-1;
+    pikposc<-pikposm-piklim+pikposc-1;
    archar<-paste(c(gsub(' ','_',fi),nm),collapse=" ")
          result<-c(result,archar)
-   archar<-paste(c(nm,"peak_index:",pikpos,"c:",pikposc),collapse=" ")
+   archar<-paste(c(nm,"RT(min):",round(tpeak[pikposm]/60,3),"c:",round(tpeak[pikposc]/60,3)),collapse=" ")
          result<-c(result,archar)
-   archar<-paste(c(nm,smaxpik,maxpik,"c:",maxpikc),collapse=" ")
+   archar<-paste(c(nm,smaxpik,maxpikm,"c:",maxpikc),collapse=" ")
          result<-c(result,archar)
-   archar<-paste(c(nm,"mz:",round(pikmz,1),"c:",round(pikmzc,1)),collapse=" ")
+   archar<-paste(c(nm,"mz:",round(pikmzm,1)),collapse=" ")
          result<-c(result,archar)
-   archar<-paste(c(nm,s5tp,pikint,"c:",pikintc),collapse=" ")
+   archar<-paste(c(nm,s5tp,pikintm),collapse=" ")
          result<-c(result,archar)
-   archar<-paste(c(nm,"base:",round(bas),"c:",round(basc)),collapse=" ")
+   archar<-paste(c(nm,"base:",round(basm)),collapse=" ")
          result<-c(result,archar)
 #   archar<-paste(c(nm,"max-base:",delta),collapse=" ")
 #         result<-c(result,archar)
-   archar<-paste(c(gsub(' ','_',fi),nm,maxpik,delta),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm,maxpikm,delta),collapse=" ")
          res1<-c(res1,archar)
 #   archar<-paste(c(nm,"relative:",rel),collapse=" ")
 #         result<-c(result,archar)
-   archar<-paste(c(gsub(' ','_',fi),nm,maxpik,rel),collapse=" ")
+   archar<-paste(c(gsub(' ','_',fi),nm,maxpikm,rel),collapse=" ")
          res2<-c(res2,archar)
-            }
      } # change of metabolite (imet)
  return(list(result,res1,res2,phenom))}
   

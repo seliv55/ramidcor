@@ -215,7 +215,7 @@ basln<-function(vec,pos=length(vec),ofs=0){# baseline
   if((basl>0)&(basr>0)) bas<-min(basl,basr)
   else if(basl<0) bas<-basr
   else if(basr<0) bas<-basl
- return(bas*5)}
+ return(bas)}
 
 rmp<-function(posmz,intens,selmz,duplim=9){
 # removing elements referring to the same timepoint
