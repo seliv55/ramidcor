@@ -218,20 +218,22 @@ discan<-function(fi,intab, tlim=20){
         a<-as.character(intab$Fragment[imet])
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
     nmassm <-nCfrg+4 # number of isotopores to present calculated from formula
-
    a<-psimat(nr=ltpeak, nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
       intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
+      
+   piklim<-9;  nmassc<-1
+   a<-psimat(nr=ltpeak, nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
+    intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
+      
       inten1<-intensm[,2]
       pikposm<-which.max(inten1)
-      if((tpeak(pikposm)-tpeak(round(ltpeak/2)))>(tlim-4)) {
+      if(tpeak(pikposm))>(5*tlim/3)) {
       inten1<-intensm[-(pikposm-piklim):-length(intensm),2]
+      } else {if(tpeak(pikposm))<(tlim/3)) inten1<-intensm[-1:-(pikposm+piklim),2] 
       }
             pikposm<-which.max(inten1)
 
 # control peak
-   piklim<-9;  nmassc<-1
-   a<-psimat(nr=ltpeak, nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
-    intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
          pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
         
   if(abs(pikposc-piklim)>3) next
