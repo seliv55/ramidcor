@@ -215,34 +215,30 @@ discan<-function(fi,intab, tlim=20){
    mzpeak<-mz[imzi:imzfi] # all mz between the timepoints limiting the peak
    ivpeak<-iv[imzi:imzfi] # all intensity between the timepoints limiting the peak 
 # main peak
-   intensm<-matrix(); selmzm<-matrix();
         a<-as.character(intab$Fragment[imet])
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
     nmassm <-nCfrg+4 # number of isotopores to present calculated from formula
+
    a<-psimat(nr=ltpeak, nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
       intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
-      pikvalm<-apply(intensm,2,max)
-      isomaxm<-which.max(pikvalm)
-      pikposm<-which.max(intensm[,isomaxm])
+      inten1<-intensm[,2]
+      pikposm<-which.max(inten1)
+      if((tpeak(pikposm)-tpeak(round(ltpeak/2)))>(tlim-4)) {
+      inten1<-intensm[-(pikposm-piklim):-length(intensm),2]
+      }
+            pikposm<-which.max(inten1)
+
 # control peak
-   intensc<-matrix(); selmzc<-matrix(); piklim<-9
-      nmassc<-nCfrg
+   piklim<-9;  nmassc<-1
    a<-psimat(nr=ltpeak, nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
-#     if((pikposm<piklim)|((pikposm+piklim)>ltpeak)) next
-    if(nmassc>1){
-        pikvalc<-apply(intensc[(pikposm-piklim):(pikposm+piklim),1:nmassc],2,max)
-        isomaxc<-which.max(pikvalc)
-    } else {pikvalc<-max(intensc[(pikposm-piklim):(pikposm+piklim),1:nmassc])
-     isomaxc<-1;
-    }
-        pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim),isomaxc])
-       maxpikc<-intensc[pikposm,isomaxc]
+         pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
+        
   if(abs(pikposc-piklim)>3) next
-       maxpikm<-intensm[pikposm,isomaxm]
+       maxpikc<-intensc[pikposc]
+       maxpikm<-intensm[pikposm,2]
        ilim=0
-  if(maxpikm>limsens) {ilim=ilim+1; while(intensm[pikposm+ilim,isomaxm]>limsens) ilim=ilim+1}
-  print(ilim)
+  if(maxpikm>limsens) {ilim=ilim+1; while(intensm[pikposm+ilim,2]>limsens) ilim=ilim+1}
      pikposr<-pikposm+ilim;  pikmzm<-numeric(); pikintm<-numeric();  basm<-numeric()
   for(k in 1:nmassm) {
       pikmzm[k]<-selmzm[pikposm,k] # peak mz
