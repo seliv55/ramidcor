@@ -21,12 +21,12 @@ title<-ftitle()
      df0<-data.frame(); # data frame to write Ramid output in PhenoMeNal format
      res<-character(); res1<-character(); res2<-character(); phen<-""
      if(md=='scan') for(fi in lcdf){ # fi <- lcdf[1]
-                                    fi<-paste(cdfdir,fi, sep="")#fi1<-fi
-                                    a <-discan(fi,intab) 
-                                    res<-c(res,a[[1]])
-                                    res1<-c(res1,a[[2]])
-                                    res2<-c(res2,a[[3]])
-                                    phen<-c(phen,a[[4]])
+            fi<-paste(cdfdir,fi, sep="") #     fi1<-fi
+            a <-discan(fi,intab) 
+            res<-c(res,a[[1]])
+            res1<-c(res1,a[[2]])
+            res2<-c(res2,a[[3]])
+            phen<-c(phen,a[[4]])
        } else for(fi in lcdf){
                               fi<-paste(cdfdir,fi, sep="")
                               a <-getdistr(fi,intab)
@@ -221,15 +221,17 @@ discan<-function(fi,intab, tlim=20){
    a<-psimat(nr=ltpeak, nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
       intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
       
-   piklim<-9;  nmassc<-1
+   piklim<-7;  nmassc<-1
    a<-psimat(nr=ltpeak, nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
       
-      inten1<-intensm[,2]
+    inten1<-intensm[,2]
       pikposm<-which.max(inten1)
-      if(tpeak[pikposm]>(5*tlim/3)) {
+    limin<- 5*sum(inten1)/ltpeak
+    if(inten1[pikposm]<limin) next
+      if(pikposm>(4*ltpeak/5)) {
       inten1<-intensm[-(pikposm-piklim):-length(intensm),2]
-      } else {if(tpeak[pikposm]<(tlim/3)) {inten1<-intensm[-1:-(pikposm+piklim),2] 
+      } else {if(pikposm<(ltpeak/5)) {inten1<-intensm[-1:-(pikposm+piklim),2] 
        intensc<-intensc[-1:-(pikposm+piklim)]
       }
       }
@@ -238,16 +240,18 @@ discan<-function(fi,intab, tlim=20){
 # control peak
          pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
         
-  if(abs(pikposc-piklim)>3) next
+  if(abs(pikposc-piklim)>4) next
        maxpikc<-intensc[pikposc]
-       maxpikm<-intensm[pikposm,2]
-       ilim=0
-  if(maxpikm>limsens) {ilim=ilim+1; while(intensm[pikposm+ilim,2]>limsens) ilim=ilim+1}
-     pikposr<-pikposm+ilim;  pikmzm<-numeric(); pikintm<-numeric();  basm<-numeric()
+       maxpikm<-max(intensm[pikposm,])
+       isomax<-which.max(intensm[pikposm,])
+     pikmzm<-numeric(); pikintm<-numeric();  basm<-numeric(); ilim=0
   for(k in 1:nmassm) {
       pikmzm[k]<-selmzm[pikposm,k] # peak mz
-      if(maxpikm>limsens) pikintm[k]<-((intensm[(pikposm-1),k]+intensm[pikposr,k]))/2 else
-      pikintm[k]<- sum(intensm[(pikposm-2):(pikposm+2),k])/5
+      if(intensm[pikposm,k]>limsens) { ilim=ilim+1;
+         while(intensm[pikposm+ilim,k]>limsens) ilim=ilim+1
+         pikposr<-pikposm+ilim
+         pikintm[k]<-((intensm[(pikposm-1),k]+intensm[pikposr,k]))/2
+      }  else pikintm[k]<- sum(intensm[(pikposm-2):(pikposm+2),k])/5
    }
       basm<-apply(intensm,2,basln,pos=pikposm,ofs=9)
   delta<-round(pikintm-basm)
