@@ -227,9 +227,11 @@ discan<-function(fi,intab, tlim=20){
       
       inten1<-intensm[,2]
       pikposm<-which.max(inten1)
-      if(tpeak(pikposm))>(5*tlim/3)) {
+      if(tpeak[pikposm]>(5*tlim/3)) {
       inten1<-intensm[-(pikposm-piklim):-length(intensm),2]
-      } else {if(tpeak(pikposm))<(tlim/3)) inten1<-intensm[-1:-(pikposm+piklim),2] 
+      } else {if(tpeak[pikposm]<(tlim/3)) {inten1<-intensm[-1:-(pikposm+piklim),2] 
+       intensc<-intensc[-1:-(pikposm+piklim)]
+      }
       }
             pikposm<-which.max(inten1)
 
