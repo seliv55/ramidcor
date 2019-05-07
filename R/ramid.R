@@ -5,7 +5,7 @@
 #ramid(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan')
 # ramid(infile="../INES/ScanList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",md='scan')  
 # ramid(infile="../INES/SimList.csv",cdfdir="../INES/PIM/Parental_Hypoxia/Parental_Hypoxia_SIMLAC.AIA/",fiout="out.csv",md='sim')
-#ramid(infile='../MediaHELNormoxia/Media HEL Nor Long.txt',cdfdir='../MediaHELNormoxia/Media HEL Nor Long/',fiout="out.csv",md='scan')
+#ramid(infile='../MediaHELNormoxia/MediaHELNorLong',cdfdir='../MediaHELNormoxia/Media HEL Nor Long/',fiout="out.csv",md='scan')
 
  library(ncdf4)
 ramid<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan'){
@@ -226,17 +226,22 @@ discan<-function(fi,intab, tlim=20){
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
       
     inten1<-intensm[,2]
-      pikposm<-which.max(inten1)
-    limin<- 5*sum(inten1)/ltpeak
+      pikposm<-which.max(inten1); ilim<-0
+      if(inten1[pikposm]>limsens) { ilim=ilim+1;  while(inten1[pikposm+ilim]>limsens) ilim=ilim+1}
+       pikposr<-pikposm+ilim
+       bs<-min(sum(inten1[1:(pikposm-piklim)])/(pikposm-piklim),
+           sum(inten1[(pikposr+piklim):ltpeak])/(ltpeak-pikposr-piklim))
+    limin<- 5*bs
     if(inten1[pikposm]<limin) next
       if(pikposm>(4*ltpeak/5)) {
       inten1<-intensm[-(pikposm-piklim):-length(intensm),2]
-      } else {if(pikposm<(ltpeak/5)) {inten1<-intensm[-1:-(pikposm+piklim),2] 
-       intensc<-intensc[-1:-(pikposm+piklim)]
-      }
-      }
+      pikposm<-which.max(inten1)
+      } else {if(pikposm<(ltpeak/5)) {inten1<-intensm[-1:-(pikposr+piklim),2] 
+       intensc<-intensc[-1:-(pikposr+piklim)]
             pikposm<-which.max(inten1)
-
+      }
+      }
+      if((pikposm<piklim)|(pikposm>(length(inten1)-piklim))) next
 # control peak
          pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
         
