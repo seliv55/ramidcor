@@ -208,12 +208,15 @@ discan<-function(fi,intab, tlim=20){
    itpeak<-which(abs(rett-rts[imet])<tlim)  # index of timepoint closest to theoretical retention time
    ltpeak<-length(itpeak)
    tpeak<-rett[itpeak]
+   
+   imzi<-numeric()
+   imzi[1]<-sum(npoint[1:(itpeak[1]-1)])+1      # index of m/z corresponding to left time boundary of peak
+  for(i in 2:ltpeak)  imzi[i]<-imzi[i-1]+npoint[itpeak[i-1]]
+   imzfi<-imzi[ltpeak]+npoint[itpeak[ltpeak]]-1 # index of m/z corresponding to right time boundary of peak
+   mzpeak<-mz[imzi[1]:imzfi] # all mz between the timepoints limiting the peak
+   ivpeak<-iv[imzi[1]:imzfi] # all intensity between the timepoints limiting the peak 
+  for(i in 2:ltpeak)  imzi[i]<-imzi[i]-imzi[1]+1;  imzi[1]<-1
 
-   imzi<-sum(npoint[1:itpeak[1]])+1         # index of m/z corresponding to left time boundary of peak
-   imzpik<-sum(npoint[(itpeak[2]):itpeak[ltpeak]]) # number of mz values inside the time boundaries
-   imzfi<-imzi+imzpik-1                     # index of m/z corresponding to right time boundary of peak
-   mzpeak<-mz[imzi:imzfi] # all mz between the timepoints limiting the peak
-   ivpeak<-iv[imzi:imzfi] # all intensity between the timepoints limiting the peak 
 # main peak
         a<-as.character(intab$Fragment[imet])
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
