@@ -218,11 +218,11 @@ discan<-function(fi,intab, tlim=20){
         a<-as.character(intab$Fragment[imet])
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
     nmassm <-nCfrg+4 # number of isotopores to present calculated from formula
-   a<-psimat(nr=ltpeak, nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
+   a<-psimat(nr=ltpeak, nmass=nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
       intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
       
    piklim<-7;  nmassc<-1
-   a<-psimat(nr=ltpeak, nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
+   a<-psimat(nr=ltpeak, nmass=nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
       
     inten1<-intensm[,2]
@@ -245,7 +245,7 @@ discan<-function(fi,intab, tlim=20){
 # control peak
          pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
         
-  if(abs(pikposc-piklim)>4) next
+  if(abs(pikposc-piklim)>5) next
        maxpikc<-intensc[pikposc]
        maxpikm<-max(intensm[pikposm,])
        isomax<-which.max(intensm[pikposm,])
@@ -276,7 +276,7 @@ discan<-function(fi,intab, tlim=20){
          result<-c(result,archar)
    archar<-paste(c(nm,smaxpik,maxpikm,"c:",maxpikc),collapse=" ")
          result<-c(result,archar)
-   archar<-paste(c(nm,"mz:",round(pikmzm,1)),collapse=" ")
+   archar<-paste(c(nm,"mz:",round(pikmzm)),collapse=" ")
          result<-c(result,archar)
    archar<-paste(c(nm,s5tp,pikintm),collapse=" ")
          result<-c(result,archar)
