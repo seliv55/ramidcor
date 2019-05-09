@@ -210,59 +210,28 @@ dupl<-function(vec,pos){# add element to a vector
    
 basln<-function(vec,pos=length(vec),ofs=0){# baseline
    basl<--1; basr<--1;bas<-0
-  if(pos>ofs) basl<-mean(vec[1:(pos-ofs)])
-  if(pos<(length(vec)-ofs)) basr<-mean(vec[(pos+ofs):length(vec)])
+  if(pos>ofs) basl<-mean(vec[which(vec[1:(pos-ofs)]>0)])
+  if(pos<(length(vec)-ofs)) basr<-mean(vec[which(vec[(pos+ofs):length(vec)]>0)])
   if((basl>0)&(basr>0)) bas<-min(basl,basr)
   else if(basl<0) bas<-basr
   else if(basr<0) bas<-basl
- return(bas*5)}
+ return(bas)}
 
-rmp<-function(posmz,intens,selmz,duplim=9){
-# removing elements referring to the same timepoint
-   dup<-which(diff(posmz)<duplim)
-  while(length(dup)>0){
-    intens[dup+1]<- intens[dup]+intens[dup+1]
-    intens<-intens[-dup]
-    selmz<-selmz[-dup] 
-    posmz<-posmz[-dup]
-    dup<-which(diff(posmz)<duplim)
-  } # length(posmz)
- return(list(posmz,intens,selmz))  }
-   
-addp<-function(posmz,intens,selmz){
-# adding missing elements
-mislim<-max(diff(posmz)[diff(posmz)<700])
-   while(posmz[1]>mislim) {
-    posmz<-c(posmz[1]-mislim+9,posmz);
-    intens<-dupl(intens,1);selmz<-dupl(selmz,1)
-   }
-     mis<-which(diff(posmz)>mislim)
-   while(length(mis)>0){
-      intens<-dupl(intens,mis[1])
-      selmz<-dupl(selmz,mis[1])
-      posmz<-dupl(posmz,mis[1])
-      posmz[mis[1]+1]<-posmz[mis[1]]+mislim-2
-      mis<-which(diff(posmz)>mislim)
-   }
- return(list(posmz,intens,selmz))  }
- 
-psimat<-function(nr,nmass,mzpeak,ivpeak,mzz0,dmzz,lefb,rigb,ofs){
+psimat<-function(nr,nmass,imzi,mzpeak,ivpeak,mzz0,dmzz,ofs){
     posmz<-matrix(nrow=nr,ncol=nmass,0);
     intens<-matrix(nrow=nr,ncol=nmass,0);
     selmz<-matrix(nrow=nr,ncol=nmass,0);
- for(k in 1:nmass) {iso<-k-ofs;
+ for(k in 1:nmass) {iso<-k-ofs
    posimz<-which((mzpeak>=(mzz0-dmzz+iso))&(mzpeak<=(mzz0+dmzz+iso))) # indexes of specific mz 
-   intensi<-ivpeak[posimz] # selection of intensities for specific mz value
-   selemz<-mzpeak[posimz] # selection of specific mz values at timepoints
- a<-rmp(posimz,intensi,selemz)
- a<-addp(a[[1]],a[[2]],a[[3]]);
-  if(length(a[[1]])>(rigb-5)){
- posmz[1:(rigb-lefb+1),k]=a[[1]][lefb:(rigb)]
- intens[1:(rigb-lefb+1),k]<-a[[2]][lefb:rigb]
- selmz[1:(rigb-lefb+1),k]<-a[[3]][lefb:rigb]
-    }}
+   for(i in 1:length(posimz)) {ip<-(which(posimz[i]<imzi)[1]-1)
+            posmz[ip,k]<-posimz[i]
+            intens[ip,k]<-intens[ip,k]+ivpeak[posimz[i]]
+            selmz[ip,k]<-mzz0+iso            
+            }
+            a<-selmz[which(selmz[,k]>0)[1],k]
+            selmz[selmz[,k]==0,k]<-a
+            }
   return(list(posmz,intens,selmz))}
- 
  
 baseln<-function(matis){ #finds baseline
   niso<-ncol(matis); bas<-numeric(niso)
