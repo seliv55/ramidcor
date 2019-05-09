@@ -211,21 +211,21 @@ discan<-function(fi,intab, tlim=20){
    
    imzi<-numeric()
    imzi[1]<-sum(npoint[1:(itpeak[1]-1)])+1      # index of m/z corresponding to left time boundary of peak
-  for(i in 2:ltpeak)  imzi[i]<-imzi[i-1]+npoint[itpeak[i-1]]
-   imzfi<-imzi[ltpeak]+npoint[itpeak[ltpeak]]-1 # index of m/z corresponding to right time boundary of peak
+  for(i in 2:(ltpeak+1))  imzi[i]<-imzi[i-1]+npoint[itpeak[i-1]]
+   imzfi<-imzi[ltpeak+1] # index of m/z corresponding to right time boundary of peak
    mzpeak<-mz[imzi[1]:imzfi] # all mz between the timepoints limiting the peak
    ivpeak<-iv[imzi[1]:imzfi] # all intensity between the timepoints limiting the peak 
-  for(i in 2:ltpeak)  imzi[i]<-imzi[i]-imzi[1]+1;  imzi[1]<-1
+  for(i in 2:(ltpeak+1))  imzi[i]<-imzi[i]-imzi[1]+1;  imzi[1]<-1
 
 # main peak
         a<-as.character(intab$Fragment[imet])
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
     nmassm <-nCfrg+4 # number of isotopores to present calculated from formula
-   a<-psimat(nr=ltpeak, nmass=nmassm, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=2)
+   a<-psimat(nr=ltpeak, nmass=nmassm, imzi, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, ofs=2)
       intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
       
    piklim<-7;  nmassc<-1
-   a<-psimat(nr=ltpeak, nmass=nmassc, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, lefb=1, rigb=ltpeak, ofs=1)
+   a<-psimat(nr=ltpeak, nmass=nmassc, imzi, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
       
     inten1<-intensm[,2]
@@ -279,7 +279,7 @@ discan<-function(fi,intab, tlim=20){
          result<-c(result,archar)
    archar<-paste(c(nm,smaxpik,maxpikm,"c:",maxpikc),collapse=" ")
          result<-c(result,archar)
-   archar<-paste(c(nm,"mz:",round(pikmzm)),collapse=" ")
+   archar<-paste(c(nm,"mz:",round(pikmzm,1)),collapse=" ")
          result<-c(result,archar)
    archar<-paste(c(nm,s5tp,pikintm),collapse=" ")
          result<-c(result,archar)
