@@ -5,7 +5,8 @@
 #ramid(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan')
 # ramid(infile="../INES/ScanList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",md='scan')  
 # ramid(infile="../INES/SimList.csv",cdfdir="../INES/PIM/Parental_Hypoxia/Parental_Hypoxia_SIMLAC.AIA/",fiout="out.csv",md='sim')
-#ramid(infile='../MediaHELNormoxia/MediaHELNorLong',cdfdir='../MediaHELNormoxia/Media HEL Nor Long/',fiout="out.csv",md='scan')
+#ramid(infile='../johanna/MediaHELNormoxia/MediaHELNorLong',cdfdir='../MediaHELNormoxia/Media HEL Nor Long/',fiout="out.csv",md='scan')
+#ramid(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',cdfdir='../johanna/MediaHELHypoxia/Media HEL Hyp long/',fiout="out.csv",md='scan')
 
  library(ncdf4)
 ramid<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan'){
@@ -47,6 +48,7 @@ title<-ftitle()
        if(!(file.exists(celdir))) dir.create(celdir)
        
        for(nam in intab$Name) {ofi<-paste(celdir,nam,sep="")
+        write(head(paste('###\t\t\tRAMID version 1.0',Sys.time(),'\t***\n')),ofi)
           tmp<-subset(res,(grepl(as.character(nam),res)))
           if(length(tmp)){
             mzrow<-subset(tmp,(grepl("mz:",tmp)))
@@ -55,7 +57,7 @@ title<-ftitle()
            titl1<-paste("relative_values,CDF_file: Max",mzs)
           tmp<-gsub(as.character(nam)," ",tmp)
           tmp<-gsub("  ","",tmp)
-        write(tmp,ofi)
+        write(tmp,ofi,append=T)
           tmp<-subset(res1,(grepl(paste(as.character(nam)),res1)))
           tmp<-gsub(as.character(nam)," ",tmp)
           tmp<-gsub("  ","",tmp)
@@ -230,21 +232,21 @@ discan<-function(fi,intab, tlim=20){
       
     inten1<-intensm[,2]
       pikposm<-which.max(inten1); ilim<-0
+      if((pikposm<piklim)|(pikposm>(length(inten1)-piklim))) next
       if(inten1[pikposm]>limsens) { ilim=ilim+1;  while(inten1[pikposm+ilim]>limsens) ilim=ilim+1}
        pikposr<-pikposm+ilim
-       bs<-min(sum(inten1[1:(pikposm-piklim)])/(pikposm-piklim),
-           sum(inten1[(pikposr+piklim):ltpeak])/(ltpeak-pikposr-piklim))
-    limin<- 5*bs
-    if(inten1[pikposm]<limin) next
       if(pikposm>(4*ltpeak/5)) {
       inten1<-intensm[-(pikposm-piklim):-length(intensm),2]
       pikposm<-which.max(inten1)
       } else {if(pikposm<(ltpeak/5)) {inten1<-intensm[-1:-(pikposr+piklim),2] 
        intensc<-intensc[-1:-(pikposr+piklim)]
             pikposm<-which.max(inten1)
-      }
-      }
-      if((pikposm<piklim)|(pikposm>(length(inten1)-piklim))) next
+      }      }
+      ltpeak<-length(inten1)
+       bs<-min(sum(inten1[1:(pikposm-piklim)])/(pikposm-piklim),
+           sum(inten1[(pikposr+piklim):ltpeak])/(ltpeak-pikposr-piklim))
+    limin<- 5*bs
+    if(inten1[pikposm]<limin) next
 # control peak
          pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
         
