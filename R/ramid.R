@@ -46,9 +46,9 @@ title<-ftitle()
        }
         print(paste(celdir," len=",len))
        if(!(file.exists(celdir))) dir.create(celdir)
-       
+      
        for(nam in intab$Name) {ofi<-paste(celdir,nam,sep="")
-        write(head(paste('###\t\t\tRAMID version 1.0',Sys.time(),'\t***\n')),ofi)
+        write(paste('###\t\t\tRAMID version 1.0',Sys.time(),'\t***\n'),ofi)
           tmp<-subset(res,(grepl(as.character(nam),res)))
           if(length(tmp)){
             mzrow<-subset(tmp,(grepl("mz:",tmp)))
@@ -188,6 +188,12 @@ getdistr<-function(fi,intab, tlim=100){
               }
            }
  return(list(result,res1,res2,phenom))}     
+
+findpb<-function(vek,ls){ #find peakboundaries
+    pikposl<-which.max(vek); pikposr<-pikposl; len<-length(vek) 
+    while(vek[pikposr]>ls) if(pikposr<len) {pikposr=pikposr+1} else {break}
+return (list(pikposl,pikposr))}      
+
  
 discan<-function(fi,intab, tlim=20){
 # fi: file name
@@ -205,7 +211,7 @@ discan<-function(fi,intab, tlim=20){
 #     totiv<-a[[5]]                     # sum of intensities at each rt
       dmz=0.49  # index of beginning of mz scan interval for each timepoint
 #  search for specified metabolites
- for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){#imet<-23
+ for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){#imet<-23#729fcf
    nm<-as.character(intab$Name[imet])
    itpeak<-which(abs(rett-rts[imet])<tlim)  # index of timepoint closest to theoretical retention time
    ltpeak<-length(itpeak)
@@ -231,18 +237,23 @@ discan<-function(fi,intab, tlim=20){
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
       
     inten1<-intensm[,2]
-      pikposm<-which.max(inten1); ilim<-0
-      if((pikposm<piklim)|(pikposm>(length(inten1)-piklim))) next
-      if(inten1[pikposm]>limsens) { ilim=ilim+1;  while(inten1[pikposm+ilim]>limsens) ilim=ilim+1}
-       pikposr<-pikposm+ilim
-      if(pikposm>(4*ltpeak/5)) {
-      inten1<-intensm[-(pikposm-piklim):-length(intensm),2]
-      pikposm<-which.max(inten1)
-      } else {if(pikposm<(ltpeak/5)) {inten1<-intensm[-1:-(pikposr+piklim),2] 
-       intensc<-intensc[-1:-(pikposr+piklim)]
-            pikposm<-which.max(inten1)
+
+       a<-findpb(vek=inten1, ls=limsens)
+       pikposm<-a[[1]]; pikposr<-a[[2]]
+       
+rmbadpik<-function(vek,rpikposr,lpikpos,vekc,piklim){ len<-length(vec)
+if(rpikpos>(4*len/5)) {
+      vek<-vek[-(rpikpos-piklim):-len]
+      lpikpos<-which.max(vek); rpikpos<-lpikpos
+      } else { if(lpikpos<(len/5)) {vek<-vek[-1:-(rpikpos+piklim)] 
+       vekc<-vekc[-1:-(pikposr+piklim)]
+            lpikpos<-which.max(vek); rpikposr<-lpikpos
       }      }
-      ltpeak<-length(inten1)
+return(vek,lpikpos,rpikpos)}
+      a<-rmbadpik(inten1,)
+      ltpeak<-length(inten1,pikposm,pikposr,intensc,piklim)
+      
+      if((pikposm<piklim)|(pikposm>(length(inten1)-piklim))) next
        bs<-min(sum(inten1[1:(pikposm-piklim)])/(pikposm-piklim),
            sum(inten1[(pikposr+piklim):ltpeak])/(ltpeak-pikposr-piklim))
     limin<- 5*bs
