@@ -194,6 +194,16 @@ findpb<-function(vek,ls){ #find peakboundaries
     while(vek[pikposr]>ls) if(pikposr<len) {pikposr=pikposr+1} else {break}
 return (list(pikposl,pikposr))}      
 
+rmbadpik<-function(vek,rpikposr,lpikpos,vekc,piklim){ len<-length(vec)
+if(rpikpos>(4*len/5)) {
+      vek<-vek[-(rpikpos-piklim):-len]
+      lpikpos<-which.max(vek); rpikpos<-lpikpos
+      } else { if(lpikpos<(len/5)) {vek<-vek[-1:-(rpikpos+piklim)] 
+       vekc<-vekc[-1:-(pikposr+piklim)]
+            lpikpos<-which.max(vek); rpikposr<-lpikpos
+      }      }
+return(vek,lpikpos,rpikpos)}
+
  
 discan<-function(fi,intab, tlim=20){
 # fi: file name
@@ -241,17 +251,9 @@ discan<-function(fi,intab, tlim=20){
        a<-findpb(vek=inten1, ls=limsens)
        pikposm<-a[[1]]; pikposr<-a[[2]]
        
-rmbadpik<-function(vek,rpikposr,lpikpos,vekc,piklim){ len<-length(vec)
-if(rpikpos>(4*len/5)) {
-      vek<-vek[-(rpikpos-piklim):-len]
-      lpikpos<-which.max(vek); rpikpos<-lpikpos
-      } else { if(lpikpos<(len/5)) {vek<-vek[-1:-(rpikpos+piklim)] 
-       vekc<-vekc[-1:-(pikposr+piklim)]
-            lpikpos<-which.max(vek); rpikposr<-lpikpos
-      }      }
-return(vek,lpikpos,rpikpos)}
-      a<-rmbadpik(inten1,)
-      ltpeak<-length(inten1,pikposm,pikposr,intensc,piklim)
+      a<-rmbadpik(inten1,pikposm,pikposr,intensc,piklim)
+      
+      ltpeak<-length(inten1)
       
       if((pikposm<piklim)|(pikposm>(length(inten1)-piklim))) next
        bs<-min(sum(inten1[1:(pikposm-piklim)])/(pikposm-piklim),
