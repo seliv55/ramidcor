@@ -22,7 +22,7 @@ title<-ftitle()
      df0<-data.frame(); # data frame to write Ramid output in PhenoMeNal format
      res<-character(); res1<-character(); res2<-character(); phen<-""
      if(md=='scan') for(fi in lcdf){ # fi <- lcdf[1]
-            fi<-paste(cdfdir,fi, sep="") #     fi1<-fi
+            fi<-paste(cdfdir,fi, sep="");     fi1<-fi
             a <-discan(fi,intab) 
             res<-c(res,a[[1]])
             res1<-c(res1,a[[2]])
@@ -189,20 +189,17 @@ getdistr<-function(fi,intab, tlim=100){
            }
  return(list(result,res1,res2,phenom))}     
 
-findpb<-function(vek,ls){ #find peakboundaries
-    pikposl<-which.max(vek); pikposr<-pikposl; len<-length(vek) 
-    while(vek[pikposr]>ls) if(pikposr<len) {pikposr=pikposr+1} else {break}
-return (list(pikposl,pikposr))}      
-
-rmbadpik<-function(vek,rpikposr,lpikpos,vekc,piklim){ len<-length(vec)
+rmbadpik<-function(mat,vekc,piklim,ls){
+    lpikpos<-which.max(mat[,2]); rpikpos<-lpikpos; len<-length(mat[,2]) 
 if(rpikpos>(4*len/5)) {
-      vek<-vek[-(rpikpos-piklim):-len]
-      lpikpos<-which.max(vek); rpikpos<-lpikpos
-      } else { if(lpikpos<(len/5)) {vek<-vek[-1:-(rpikpos+piklim)] 
-       vekc<-vekc[-1:-(pikposr+piklim)]
-            lpikpos<-which.max(vek); rpikposr<-lpikpos
+      mat<-mat[-(rpikpos-piklim):-len,]
+      lpikpos<-which.max(mat[,2]); rpikpos<-lpikpos
+      } else { if(lpikpos<(len/5)) {mat<-mat[-1:-(rpikpos+piklim),] 
+       vekc<-vekc[-1:-(rpikpos+piklim)]
+            lpikpos<-which.max(mat[,2]); rpikpos<-lpikpos
       }      }
-return(vek,lpikpos,rpikpos)}
+    while(mat[rpikpos,2]>ls) if(rpikpos<len) {rpikpos=rpikpos+1} else {break}
+return(list(lpikpos,rpikpos,mat,vekc))}
 
  
 discan<-function(fi,intab, tlim=20){
@@ -240,26 +237,19 @@ discan<-function(fi,intab, tlim=20){
     nCfrg<-as.numeric(substr(a,4,nchar(a)))-as.numeric(substr(a,2,2))+1
     nmassm <-nCfrg+4 # number of isotopores to present calculated from formula
    a<-psimat(nr=ltpeak, nmass=nmassm, imzi, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, ofs=2)
-      intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
+    intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
       
-   piklim<-7;  nmassc<-1
+    piklim<-7;  nmassc<-1
    a<-psimat(nr=ltpeak, nmass=nmassc, imzi, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
-      
-    inten1<-intensm[,2]
 
-       a<-findpb(vek=inten1, ls=limsens)
-       pikposm<-a[[1]]; pikposr<-a[[2]]
-       
-      a<-rmbadpik(inten1,pikposm,pikposr,intensc,piklim)
+      a<-rmbadpik(mat=intensm,vekc=intensc,piklim, ls=limsens)
+       pikposm<-a[[1]]; pikposr<-a[[2]]; intensm<-a[[3]]; intensc<-a[[4]]
+       ltpeak<-length(intensm[,2])
       
-      ltpeak<-length(inten1)
-      
-      if((pikposm<piklim)|(pikposm>(length(inten1)-piklim))) next
-       bs<-min(sum(inten1[1:(pikposm-piklim)])/(pikposm-piklim),
-           sum(inten1[(pikposr+piklim):ltpeak])/(ltpeak-pikposr-piklim))
-    limin<- 5*bs
-    if(inten1[pikposm]<limin) next
+      if((pikposm<piklim)|(pikposm>(length(intensm[,2])-piklim))) next
+       bs<-basln(intensm[,2])
+      if(intensm[pikposm,2]< 5*bs) next
 # control peak
          pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
         

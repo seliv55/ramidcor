@@ -233,17 +233,6 @@ psimat<-function(nr,nmass,imzi,mzpeak,ivpeak,mzz0,dmzz,ofs){
             }
   return(list(posmz,intens,selmz))}
  
-baseln<-function(matis){ #finds baseline
-  niso<-ncol(matis); bas<-numeric(niso)
-  for(j in 1:niso) {
-  vlim<-min(matis[,j])*1.57
-  lbas<-(matis[,j]<=vlim)
-  arbas<-(matis[,j])[lbas]
-  bas[j]<-sum(arbas)/length(arbas)
-#  matis[,j]<-round(matis[,j]-bas)
-  }
-     return(bas);}
-
 readcdf<-function(fi) {
  nc <- nc_open(fi, readunlim=FALSE)  #open cdf file
    rett<-ncvar_get( nc, "scan_acquisition_time" )
