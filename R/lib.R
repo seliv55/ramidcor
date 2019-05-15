@@ -211,10 +211,12 @@ dupl<-function(vec,pos){# add element to a vector
 basln<-function(vec,pos=length(vec),ofs=0){# baseline
    basl<--1; basr<--1;bas<-0
   if(pos>ofs) basl<-mean(vec[which(vec[1:(pos-ofs)]>0)])
+      basl[is.nan(basl)]<-0
   if(pos<(length(vec)-ofs)) basr<-mean(vec[which(vec[(pos+ofs):length(vec)]>0)])
-  if((basl>0)&(basr>0)) bas<-min(basl,basr)
-  else if(basl<0) bas<-basr
-  else if(basr<0) bas<-basl
+      basr[is.nan(basr)]<-0
+  if((basl>0)&(basr>0)) bas<-min(basl,basr)  else {
+  if(basl<0) bas<-basr  else if(basr<0) bas<-basl
+  }
  return(bas)}
 
 psimat<-function(nr,nmass,imzi,mzpeak,ivpeak,mzz0,dmzz,ofs){

@@ -248,13 +248,14 @@ discan<-function(fi,intab, tlim=20){
        ltpeak<-length(intensm[,2])
       
       if((pikposm<piklim)|(pikposm>(length(intensm[,2])-piklim))) next
-       bs<-basln(intensm[,2])
-      if(intensm[pikposm,2]< 5*bs) next
+       bs<-basln(intensm[,2]); if(bs==0) next
+      if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 5*bs) next
 # control peak
-         pikposc<-which.max(intensc[(pikposm-piklim):(pikposm+piklim)])
-        
-  if(abs(pikposc-piklim)>5) next
-       maxpikc<-intensc[pikposc]
+         intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
+         pikposc<-which.max(intcshort)
+        if(abs(pikposc-piklim)>5) next
+
+       maxpikc<-intcshort[pikposc]
        maxpikm<-max(intensm[pikposm,])
        isomax<-which.max(intensm[pikposm,])
      pikmzm<-numeric(); pikintm<-numeric();  basm<-numeric(); ilim=0
@@ -266,7 +267,7 @@ discan<-function(fi,intab, tlim=20){
          pikintm[k]<-((intensm[(pikposm-1),k]+intensm[pikposr,k]))/2
       }  else pikintm[k]<- sum(intensm[(pikposm-2):(pikposm+2),k])/5
    }
-      basm<-apply(intensm,2,basln,pos=pikposm,ofs=9)
+      basm<-apply(intensm,2,basln,pos=pikposm,ofs=9);
   delta<-round(pikintm-basm)
        smaxpik<-"max_peak:";
   if(maxpikm>limsens) {smaxpik<-"**** !?MAX_PEAK:"; print(paste("** max=",maxpikm,"   ",nm,"   **"))}
