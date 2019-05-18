@@ -25,9 +25,10 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
       
        return(list(ff,xisq,fr))
 }
+#rumidcor(infile="../johanna/MediaHELNormoxia/MediaHELNorLong",dadir="../johanna/files/Media HEL Nor Long/")
 #rumidcor(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',dadir='../johanna/files/Media HEL Hyp long/')
-rumidcor<-function(infile,dadir,spr='\t'){
-   intab<-read.table(infile,header=T,sep=spr); phenom<-""
+rumidcor<-function(infile,dadir){
+   intab<-read.table(infile,header=T); phenom<-""
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
@@ -36,12 +37,11 @@ rumidcor<-function(infile,dadir,spr='\t'){
       line<-readLines(con)
       dati<-which(grepl("absolute_v",line))
       mzi<-as.numeric(strsplit(line[dati]," ")[[1]][-1:-2])
-      len<-length(mzi)+2
-      datf<-which(grepl("relative_v",line))
+      datf<-which(grepl("END",line))
       df0<-NULL
-      for(ln in line[(dati+1):(datf-3)]){
+      for(ln in line[(dati+1):(datf-1)]){
          a<-strsplit(ln,' ')[[1]]
-         rbind(df0,a[1:len])->df0
+         rbind(df0,a)->df0
       }
       line=""; close(con)
       phenom<- c(phenom,correct(fn,dfi=df0,mzi,metdat=intab[imet,])) 
@@ -66,9 +66,9 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
     if(Sipos>0) nSi<-as.numeric(substr(formula,Sipos+2,Sipos+2)) else nSi<-0
     if((Spos>0)&(Spos!=Sipos)) nS<-as.numeric(substr(formula,Spos+1,Spos+1)) else nS<-0
       gcmss<-dfi[,-1:-2]
-            coln<-ncol(gcmss);  nln<-nrow(gcmss); nmass<-coln-1;
-            gcms<-NULL
-            for(i in 1:coln) cbind(gcms, as.numeric( gcmss[,i]))->gcms
+      coln<-ncol(gcmss);  nln<-nrow(gcmss); nmass<-coln-1;
+      gcms<-NULL
+    for(i in 1:coln) cbind(gcms, as.numeric( gcmss[,i]))->gcms
 # theoretic distribution:
           mmlab<-mtr(nfrg,nmass,nC,nSi,nS);
 # normalization
@@ -78,19 +78,29 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
 # mass fractions
    fr<-mdistr(nfrg,gcmsn[,1:ncol(mmlab)],mmlab,nln);# write mass fractions without correction:
  fn1<-paste(fn,".txt",sep="");
+ mzis<-paste(mzi[1:(nfrg+2)])
+ mzis[1]<-"Sample_file Max_intensity"
+ 
  write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1)
-  write.table(cbind(dfi[,1],round(fr[,1:(nfrg+1)],4)),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
+  write(paste(mzis,collapse=' '),fn1,append=T)
+ write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F);
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
     ncon<-which.min(abs(1-fr[,1]))
     corr<-mmlab[1,]-gcmsn[ncon,1:ncol(mmlab)] 
      tmp<-t(apply(gcmsn[,1:ncol(mmlab)],1,'+',corr)); 
      fr<-mdistr(nfrg,tmp,mmlab,nln);
-     res<-cbind(dfi[,1],round(fr[,1:(nfrg+1)],4))
-   write("\n*** Samples fully corrected **",fn1,append=TRUE)
- write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
-   write("*** Correction factor: **",fn1,append=TRUE)
- write.table(format(t(corr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
+     res<-cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4))
+     cold<-res[ncon,]
+     res[ncon,]<-res[1,]
+     res[1,]<-cold
+      mzis[2:length(mzis)]<-paste('m',c(0:nfrg),sep='')
+      
+  write("\n*** Samples fully corrected **",fn1,append=TRUE)
+  write(paste(mzis,collapse=' '),fn1,append=T)
+  write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
+  write("*** Correction factor: **",fn1,append=TRUE)
+  write.table(format(t(corr[1:(nfrg+1)]),digits=4),fn1,quote=F,append=T,col.names=F, row.names = F);
 
   phen<-""; fr<-cbind(0,round(fr[,-ncol(fr)],4)); gc<-cbind(0,gcms[,-ncol(gcms)])
   for(i in 1:nrow(dfi)){
