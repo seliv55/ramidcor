@@ -25,9 +25,9 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
       
        return(list(ff,xisq,fr))
 }
-
-rumidcor<-function(infile="SimLacList.csv",dadir="../files/KO_Hypoxia_SCAN.AIA/"){
-   intab<-read.table(infile,header=T,sep=" "); phenom<-""
+#rumidcor(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',dadir='../johanna/files/Media HEL Hyp long/')
+rumidcor<-function(infile,dadir,spr='\t'){
+   intab<-read.table(infile,header=T,sep=spr); phenom<-""
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
@@ -44,7 +44,7 @@ rumidcor<-function(infile="SimLacList.csv",dadir="../files/KO_Hypoxia_SCAN.AIA/"
          rbind(df0,a[1:len])->df0
       }
       line=""; close(con)
-      phenom<- c(phenom,correct(fn,df0,mzi,intab[imet,])) 
+      phenom<- c(phenom,correct(fn,dfi=df0,mzi,metdat=intab[imet,])) 
             }    }
          fiout<-"fenform"               
        write(ftitle(),fiout)
@@ -70,34 +70,28 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
             gcms<-NULL
             for(i in 1:coln) cbind(gcms, as.numeric( gcmss[,i]))->gcms
 # theoretic distribution:
-          mmlab<-mtr(nmass,coln,nC,nSi,nS);
+          mmlab<-mtr(nfrg,nmass,nC,nSi,nS);
 # normalization
     if(metdat$mz0>=mzi[2]) {ef<-sum(gcms[,1])/sum(gcms[,2]); gcm<-elim(gcms,ef)
-        } else gcm<-as.matrix(cbind(gcm[,-1],0)); 
+        } else gcm<-as.matrix(cbind(gcms[,-1],0)); 
     gcmsn<-gcm[1:nln,]/apply(gcm,1,sum)
 # mass fractions
-   fr<-mdistr(nmass,gcmsn,mmlab,nln);# write mass fractions without correction:
+   fr<-mdistr(nfrg,gcmsn[,1:ncol(mmlab)],mmlab,nln);# write mass fractions without correction:
  fn1<-paste(fn,".txt",sep="");
  write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1)
   write.table(cbind(dfi[,1],round(fr[,1:(nfrg+1)],4)),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
-    lcon<-grep('[cC][oO][lL][dD]',dfi[,1])
-if(length(lcon)>0){
- if(length(lcon)>1){
-    ncon<-which.min(abs(1-fr[lcon,1]))
-    corr<-mmlab[1,]-gcmsn[lcon,][ncon,] 
- } else if(length(lcon)==1){
-  corr<-mmlab[1,]-gcmsn[lcon,]
- }
-     tmp<-t(apply(gcmsn,1,'+',corr)); 
-     fr<-mdistr(nmass,tmp,mmlab,nln);
+    ncon<-which.min(abs(1-fr[,1]))
+    corr<-mmlab[1,]-gcmsn[ncon,1:ncol(mmlab)] 
+     tmp<-t(apply(gcmsn[,1:ncol(mmlab)],1,'+',corr)); 
+     fr<-mdistr(nfrg,tmp,mmlab,nln);
      res<-cbind(dfi[,1],round(fr[,1:(nfrg+1)],4))
    write("\n*** Samples fully corrected **",fn1,append=TRUE)
  write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
    write("*** Correction factor: **",fn1,append=TRUE)
  write.table(format(t(corr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
-}
+
   phen<-""; fr<-cbind(0,round(fr[,-ncol(fr)],4)); gc<-cbind(0,gcms[,-ncol(gcms)])
   for(i in 1:nrow(dfi)){
     a<- wphen(as.character(dfi[i,1]),metdat$Name,frag, formula, metdat$RT, mzi,round(gcms[i,]),fr[i,])
