@@ -81,12 +81,12 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
  mzis<-paste(mzi[1:(nfrg+2)])
  mzis[1]<-"Sample_file Max_intensity"
  write(paste('###\t\t\tMIDCOR version 1.0',Sys.time(),'\t***\n'),fn1)
- write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1)
+ write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1,append=T)
  write(paste(mzis,collapse=' '),fn1,append=T)
  write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F);
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
-    ncon<-which.min(abs(1-fr[,1]))
+    ncon<-which.min(abs(1-fr[,1])) if(fr[ncon,1]<0.95) print(paste(metdat[1],' m0 in unlabeled <',0.95))
     corr<-mmlab[1,]-gcmsn[ncon,1:ncol(mmlab)] 
      tmp<-t(apply(gcmsn[,1:ncol(mmlab)],1,'+',corr)); 
      fr<-mdistr(nfrg,tmp,mmlab,nln);
