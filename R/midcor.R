@@ -86,7 +86,7 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
  write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F);
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
-    ncon<-which.min(abs(1-fr[,1]))
+    ncon<-which.min(abs(1-fr[,1])); if(fr[ncon,1]<0.95) print(paste(metdat$Name,': m0 in unlabeled <',0.95))
     corr<-mmlab[1,]-gcmsn[ncon,1:ncol(mmlab)] 
      tmp<-t(apply(gcmsn[,1:ncol(mmlab)],1,'+',corr)); 
      fr<-mdistr(nfrg,tmp,mmlab,nln);
@@ -99,7 +99,9 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
   write("\n*** Samples fully corrected **",fn1,append=TRUE)
   write(paste(mzis,collapse=' '),fn1,append=T)
   write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
-  write("*** Correction factor: **",fn1,append=TRUE)
+      mzis[1:(nfrg+1)]<-paste('CF_m',c(0:nfrg),sep='')
+  write("\n*** Correction factor: **",fn1,append=TRUE)
+  write(paste(mzis[1:(nfrg+1)],collapse=' '),fn1,append=T)
   write.table(format(t(corr[1:(nfrg+1)]),digits=4),fn1,quote=F,append=T,col.names=F, row.names = F);
 
   phen<-""; fr<-cbind(0,round(fr[,-ncol(fr)],4)); gc<-cbind(0,gcms[,-ncol(gcms)])
