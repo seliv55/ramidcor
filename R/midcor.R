@@ -25,10 +25,12 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
       
        return(list(ff,xisq,fr))
 }
-#rumidcor(infile="../johanna/MediaHELNormoxia/MediaHELNorLong",dadir="../johanna/files/Media HEL Nor Long/")
-#rumidcor(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',dadir='../johanna/files/Media HEL Hyp long/')
-rumidcor<-function(infile,dadir){
-   intab<-read.table(infile,header=T); phenom<-""
+#midcor(infile="../johanna/MediaHELNormoxia/MediaHELNorLong",dadir="../johanna/files/Media HEL Nor Long/")
+#midcor(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',dadir='../johanna/files/Media HEL Hyp long/')
+midcor<-function(infile,dadir){
+   a <-read.table(infile, skip=1,nrows=2); info<-a[,2]
+      print (info)
+   intab<-read.table(infile, skip=3,header=T); phenom<-""
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
@@ -44,14 +46,14 @@ rumidcor<-function(infile,dadir){
          rbind(df0,a)->df0
       }
       line=""; close(con)
-      phenom<- c(phenom,correct(fn,dfi=df0,mzi,metdat=intab[imet,])) 
+      phenom<- c(phenom,correct(fn,dfi=df0,mzi,metdat=intab[imet,],info)) 
             }    }
          fiout<-"fenform"               
        write(ftitle(),fiout)
        write(phenom,fiout,append=T)
 }
 
-correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
+correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw data;
 # samb,samf,cndb,cndf are the positions of the initial and final characters in the row name
 # designating the biological sample and conditions correspondingly
  frag<-as.character(metdat$Fragment)
@@ -78,10 +80,9 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
 # mass fractions
    fr<-mdistr(nfrg,gcmsn[,1:ncol(mmlab)],mmlab,nln);# write mass fractions without correction:
  fn1<-paste(fn,".txt",sep="");
- mzis<-paste(mzi[1:(nfrg+2)])
- mzis[1]<-"Sample_file Max_intensity"
+ mzis<-c("Sample_file Max_intensity",  paste('m',0:nfrg, sep=''))
  write(paste('###\t\t\tMIDCOR version 1.0',Sys.time(),'\t***\n'),fn1)
- write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1,append=T)
+ write("*** MID for each injection, corrected for natural enrichment using empirical formula ***",fn1,append=T)
  write(paste(mzis,collapse=' '),fn1,append=T)
  write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F);
 # correction
@@ -94,14 +95,14 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
      cold<-res[ncon,]
      res[ncon,]<-res[1,]
      res[1,]<-cold
-      mzis[2:length(mzis)]<-paste('m',c(0:nfrg),sep='')
       
-  write("\n*** Samples fully corrected **",fn1,append=TRUE)
-  write(paste(mzis,collapse=' '),fn1,append=T)
+  write("\n*** Samples additionally corrected for possible matrix effects **",fn1,append=TRUE)
+  write(paste(mzis,collapse=' '),fn1,append=T);    mzis<-character()
   write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
-      mzis[1:(nfrg+1)]<-paste('CF_m',c(0:nfrg),sep='')
+ 
+      mzis<-paste('CF_m',0:nfrg,sep='')
   write("\n*** Correction factor: **",fn1,append=TRUE)
-  write(paste(mzis[1:(nfrg+1)],collapse=' '),fn1,append=T)
+  write(paste(mzis,collapse=' '),fn1,append=T)
   write.table(format(t(corr[1:(nfrg+1)]),digits=4),fn1,quote=F,append=T,col.names=F, row.names = F);
 
   phen<-""; fr<-cbind(0,round(fr[,-ncol(fr)],4)); gc<-cbind(0,gcms[,-ncol(gcms)])
