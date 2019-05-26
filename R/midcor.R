@@ -28,8 +28,7 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
 #midcor(infile="../johanna/MediaHELNormoxia/MediaHELNorLong",dadir="../johanna/files/Media HEL Nor Long/")
 #midcor(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',dadir='../johanna/files/Media HEL Hyp long/')
 midcor<-function(infile,dadir){
-   a <-read.table(infile, skip=1,nrows=2); info<-a[,2]
-      print (info)
+   a <-read.table(infile, skip=1,nrows=2); info<-as.character(a[,2])
    intab<-read.table(infile, skip=3,header=T); phenom<-""
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
@@ -87,7 +86,12 @@ correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw da
  write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F);
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
-    ncon<-which.min(abs(1-fr[,1])); if(fr[ncon,1]<0.95) print(paste(metdat$Name,': m0 in unlabeled <',0.95))
+     cold<- grep(info[2],dfi[,1])
+    if(length(cold)<1) {print(paste(metdat$Name,': No unlabeled provided')); return()}
+    ncon<-cold[which.min(abs(1-fr[cold,1]))];
+    if(fr[ncon,1]<0.95) print(paste(metdat$Name,': m0 in unlabeled <',0.95))
+    if(as.numeric(dfi[ncon,2])>as.numeric(info[1])) {
+      print(paste(metdat$Name,': Max peak in unlabeled =',dfi[ncon,2]))  }
     corr<-mmlab[1,]-gcmsn[ncon,1:ncol(mmlab)] 
      tmp<-t(apply(gcmsn[,1:ncol(mmlab)],1,'+',corr)); 
      fr<-mdistr(nfrg,tmp,mmlab,nln);
