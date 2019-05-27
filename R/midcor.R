@@ -1,5 +1,5 @@
-#source("lib.R")
-#source("midcor.R")
+#source("R/lib.R")
+#source("R/midcor.R")
 #correct("GluC2C4b","var")
 case2<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2
     for(j in 1:nln) { k=1; for(i in 1:(nmass+1-k)) tmp[j,i+1+k]<-tmp[j,i+1+k]-corr[i]*(fr[j,1+k]);
@@ -33,7 +33,7 @@ midcor<-function(infile,dadir){
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
-    if((file.exists(fn))&(file.size(fn)>1000)){
+    if((file.exists(fn))&(file.size(fn)>500)){
       con<-file(fn,open="r")
       line<-readLines(con)
       dati<-which(grepl("absolute_v",line))
@@ -61,11 +61,17 @@ correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw da
        iCb<- as.numeric(substr(frag,pCf[1]+1,pCf[1]+1))
        iCe<- as.numeric(substr(frag,pCf[2]+1,pCf[2]+1))
        nfrg<- iCe-iCb+1
-   Cpos<-regexpr("C",formula); Hpos<-regexpr("H",formula);
-   Spos<-regexpr("S",formula); Sipos<-regexpr("Si",formula)
+    Cpos<-regexpr("C",formula); Hpos<-regexpr("H",formula);
     nC<-as.numeric(substr(formula,Cpos+1,Hpos-1))
-    if(Sipos>0) nSi<-as.numeric(substr(formula,Sipos+2,Sipos+2)) else nSi<-0
-    if((Spos>0)&(Spos!=Sipos)) nS<-as.numeric(substr(formula,Spos+1,Spos+1)) else nS<-0
+    
+    Sipos<-regexpr("Si",formula); 
+    if(Sipos>0) { nnSi<-as.numeric(substr(formula,Sipos+2,Sipos+2))
+                  if(is.na(nnSi)) nSi<-1 else nSi<-nnSi   
+      } else  nSi<-0
+    Spos<-regexpr("S",formula);
+    if((Spos>0)&(Spos!=Sipos)) {nnS=as.numeric(substr(formula,Spos+1,Spos+1))
+                  if(is.na(nnS)) nS<-1 else nS<-nnS
+    } else nS<-0
       gcmss<-dfi[,-1:-2]
       coln<-ncol(gcmss);  nln<-nrow(gcmss); nmass<-coln-1;
       gcms<-NULL

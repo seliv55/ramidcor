@@ -15,7 +15,8 @@ ramid<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout=
    pat=".CDF"
    lcdf<-dir(path = cdfdir,pattern=pat)
    outdir="files/"
-   intab<-read.table(infile,header=T)
+   a <-read.table(infile, skip=1,nrows=2); senlim<-as.numeric(as.character(a[1,2]))
+   intab<-read.table(infile, skip=3,header=T); phenom<-""
 
 title<-ftitle()
 
