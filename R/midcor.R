@@ -73,8 +73,10 @@ correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw da
     nS=as.numeric(substr(formula,Spos+1,Spos+1))
       } else { if((regexpr("S[A-Z]",formula)>0) | (regexpr("S$",formula)>0)) nS=1 }    
     
-      gcmss<-dfi[,-1:-2]
-      coln<-ncol(gcmss);  nln<-nrow(gcmss); nmass<-coln-1;
+      coln<-ncol(dfi)-2;  nln<-nrow(dfi); nmass<-coln-1;
+      gcmss<-matrix(nrow=nln,ncol=coln)
+      
+      gcmss[,]<-dfi[,-1:-2]
       gcms<-NULL
     for(i in 1:coln) cbind(gcms, as.numeric( gcmss[,i]))->gcms
 # theoretic distribution:
@@ -82,20 +84,31 @@ correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw da
 # normalization
     if(metdat$mz0>=mzi[2]) {ef<-sum(gcms[,1])/sum(gcms[,2]); gcm<-elim(gcms,ef)
         } else gcm<-as.matrix(cbind(gcms[,-1],0)); 
-    gcmsn<-gcm[1:nln,]/apply(gcm,1,sum)
+    gcmsn<-gcm
+    gcmsn[1:nln,]<-gcm[1:nln,]/apply(gcm,1,sum)
 # mass fractions
-   fr<-mdistr(nfrg,gcmsn[,1:ncol(mmlab)],mmlab,nln);# write mass fractions without correction:
+  if(nln>1) fr<-mdistr(nreal=nfrg,msd=gcmsn[,1:ncol(mmlab)],mm=mmlab,nln) else {
+      fr<-mdistr(nreal=nfrg,msd=t(as.matrix(gcmsn[,1:ncol(mmlab)])),mm=mmlab,nln)
+  }
+  
  fn1<-paste(fn,".txt",sep="");
  mzis<-c("Sample_file Max_intensity",  paste('m',0:nfrg, sep=''))
  write(paste('###\t\t\tMIDCOR version 1.0',Sys.time(),'\t***\n'),fn1)
  write("*** MID for each injection, corrected for natural enrichment using empirical formula ***",fn1,append=T)
  write(paste(mzis,collapse=' '),fn1,append=T)
- write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F);
+ if(nln>1) write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F) else {
+  write.table(cbind(t(dfi[,1:2]),round(t(fr[,1:(nfrg+1)]),4)),fn1,quote=F,append=T,col.names=F, row.names = F)
+ }
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
      cold<- grep(info[2],dfi[,1])
+     incold<-which(as.numeric(dfi[cold,2])<as.numeric(info[1]))
+     cold<-cold[incold]
     if(length(cold)<1) {print(paste(metdat$Name,': No unlabeled provided')); return()}
-    ncon<-cold[which.min(abs(1-fr[cold,1]))];
+    if(nln==1) {print(paste(metdat$Name,': No samples except one unlabeled')); return()}
+    
+    ncon<-cold[which.min(abs(1-fr[cold,1]))]
+    
     if(fr[ncon,1]<0.95) print(paste(metdat$Name,': m0 in unlabeled <',0.95))
     if(as.numeric(dfi[ncon,2])>as.numeric(info[1])) {
       print(paste(metdat$Name,': Max peak in unlabeled =',dfi[ncon,2]))  }
