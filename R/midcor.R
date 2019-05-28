@@ -63,15 +63,16 @@ correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw da
        nfrg<- iCe-iCb+1
     Cpos<-regexpr("C",formula); Hpos<-regexpr("H",formula);
     nC<-as.numeric(substr(formula,Cpos+1,Hpos-1))
-    
+      nSi<-0
     Sipos<-regexpr("Si",formula); 
     if(Sipos>0) { nnSi<-as.numeric(substr(formula,Sipos+2,Sipos+2))
-                  if(is.na(nnSi)) nSi<-1 else nSi<-nnSi   
-      } else  nSi<-0
-    Spos<-regexpr("S",formula);
-    if((Spos>0)&(Spos!=Sipos)) {nnS=as.numeric(substr(formula,Spos+1,Spos+1))
-                  if(is.na(nnS)) nS<-1 else nS<-nnS
-    } else nS<-0
+                  if(is.na(nnSi)) nSi<-1 else nSi<-nnSi   }  
+      nS<-0
+    Spos<-regexpr("S[1-9]",formula)
+    if(Spos>0) {
+    nS=as.numeric(substr(formula,Spos+1,Spos+1))
+      } else { if((regexpr("S[A-Z]",formula)>0) | (regexpr("S$",formula)>0)) nS=1 }    
+    
       gcmss<-dfi[,-1:-2]
       coln<-ncol(gcmss);  nln<-nrow(gcmss); nmass<-coln-1;
       gcms<-NULL
