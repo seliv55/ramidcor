@@ -1,5 +1,5 @@
-#source("lib.R")
-#source("midcor.R")
+#source("R/lib.R")
+#source("R/midcor.R")
 #correct("GluC2C4b","var")
 case2<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2
     for(j in 1:nln) { k=1; for(i in 1:(nmass+1-k)) tmp[j,i+1+k]<-tmp[j,i+1+k]-corr[i]*(fr[j,1+k]);
@@ -25,33 +25,34 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
       
        return(list(ff,xisq,fr))
 }
-
-rumidcor<-function(infile="SimLacList.csv",dadir="../files/KO_Hypoxia_SCAN.AIA/"){
-   intab<-read.table(infile,header=T,sep=" "); phenom<-""
+#midcor(infile="../johanna/MediaHELNormoxia/MediaHELNorLong",dadir="../johanna/files/Media HEL Nor Long/")
+#midcor(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',dadir='../johanna/files/Media HEL Hyp long/')
+midcor<-function(infile,dadir){
+   a <-read.table(infile, skip=1,nrows=2); info<-as.character(a[,2])
+   intab<-read.table(infile, skip=3,header=T); phenom<-""
    for(imet in 1:nrow(intab)){
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
-    if((file.exists(fn))&(file.size(fn)>1000)){
+    if((file.exists(fn))&(file.size(fn)>500)){
       con<-file(fn,open="r")
       line<-readLines(con)
       dati<-which(grepl("absolute_v",line))
       mzi<-as.numeric(strsplit(line[dati]," ")[[1]][-1:-2])
-      len<-length(mzi)+2
-      datf<-which(grepl("relative_v",line))
+      datf<-which(grepl("END",line))
       df0<-NULL
-      for(ln in line[(dati+1):(datf-3)]){
+      for(ln in line[(dati+1):(datf-1)]){
          a<-strsplit(ln,' ')[[1]]
-         rbind(df0,a[1:len])->df0
+         rbind(df0,a)->df0
       }
       line=""; close(con)
-      phenom<- c(phenom,correct(fn,df0,mzi,intab[imet,])) 
+      phenom<- c(phenom,correct(fn,dfi=df0,mzi,metdat=intab[imet,],info)) 
             }    }
          fiout<-"fenform"               
        write(ftitle(),fiout)
        write(phenom,fiout,append=T)
 }
 
-correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
+correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw data;
 # samb,samf,cndb,cndf are the positions of the initial and final characters in the row name
 # designating the biological sample and conditions correspondingly
  frag<-as.character(metdat$Fragment)
@@ -60,44 +61,74 @@ correct<-function(fn,dfi,mzi,metdat){#fname is the name of file with raw data;
        iCb<- as.numeric(substr(frag,pCf[1]+1,pCf[1]+1))
        iCe<- as.numeric(substr(frag,pCf[2]+1,pCf[2]+1))
        nfrg<- iCe-iCb+1
-   Cpos<-regexpr("C",formula); Hpos<-regexpr("H",formula);
-   Spos<-regexpr("S",formula); Sipos<-regexpr("Si",formula)
+    Cpos<-regexpr("C",formula); Hpos<-regexpr("H",formula);
     nC<-as.numeric(substr(formula,Cpos+1,Hpos-1))
-    if(Sipos>0) nSi<-as.numeric(substr(formula,Sipos+2,Sipos+2)) else nSi<-0
-    if((Spos>0)&(Spos!=Sipos)) nS<-as.numeric(substr(formula,Spos+1,Spos+1)) else nS<-0
-      gcmss<-dfi[,-1:-2]
-            coln<-ncol(gcmss);  nln<-nrow(gcmss); nmass<-coln-1;
-            gcms<-NULL
-            for(i in 1:coln) cbind(gcms, as.numeric( gcmss[,i]))->gcms
+      nSi<-0
+    Sipos<-regexpr("Si",formula); 
+    if(Sipos>0) { nnSi<-as.numeric(substr(formula,Sipos+2,Sipos+2))
+                  if(is.na(nnSi)) nSi<-1 else nSi<-nnSi   }  
+      nS<-0
+    Spos<-regexpr("S[1-9]",formula)
+    if(Spos>0) {
+    nS=as.numeric(substr(formula,Spos+1,Spos+1))
+      } else { if((regexpr("S[A-Z]",formula)>0) | (regexpr("S$",formula)>0)) nS=1 }    
+    
+      coln<-ncol(dfi)-2;  nln<-nrow(dfi); nmass<-coln-1;
+      gcmss<-matrix(nrow=nln,ncol=coln)
+      
+      gcmss[,]<-dfi[,-1:-2]
+      gcms<-NULL
+    for(i in 1:coln) cbind(gcms, as.numeric( gcmss[,i]))->gcms
 # theoretic distribution:
-          mmlab<-mtr(nmass,coln,nC,nSi,nS);
+          mmlab<-mtr(nfrg,nmass,nC,nSi,nS);
 # normalization
     if(metdat$mz0>=mzi[2]) {ef<-sum(gcms[,1])/sum(gcms[,2]); gcm<-elim(gcms,ef)
-        } else gcm<-as.matrix(cbind(gcm[,-1],0)); 
-    gcmsn<-gcm[1:nln,]/apply(gcm,1,sum)
+        } else gcm<-as.matrix(cbind(gcms[,-1],0)); 
+    gcmsn<-gcm
+    gcmsn[1:nln,]<-gcm[1:nln,]/apply(gcm,1,sum)
 # mass fractions
-   fr<-mdistr(nmass,gcmsn,mmlab,nln);# write mass fractions without correction:
+  if(nln>1) fr<-mdistr(nreal=nfrg,msd=gcmsn[,1:ncol(mmlab)],mm=mmlab,nln) else {
+      fr<-mdistr(nreal=nfrg,msd=t(as.matrix(gcmsn[,1:ncol(mmlab)])),mm=mmlab,nln)
+  }
+  
  fn1<-paste(fn,".txt",sep="");
- write("*** MID for each injection, corrected only for natural 13C, 29,30Si, 33,34S ***",fn1)
-  write.table(cbind(dfi[,1],round(fr[,1:(nfrg+1)],4)),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
+ mzis<-c("Sample_file Max_intensity",  paste('m',0:nfrg, sep=''))
+ write(paste('###\t\t\tMIDCOR version 1.0',Sys.time(),'\t***\n'),fn1)
+ write("*** MID for each injection, corrected for natural enrichment using empirical formula ***",fn1,append=T)
+ write(paste(mzis,collapse=' '),fn1,append=T)
+ if(nln>1) write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F) else {
+  write.table(cbind(t(dfi[,1:2]),round(t(fr[,1:(nfrg+1)]),4)),fn1,quote=F,append=T,col.names=F, row.names = F)
+ }
 # correction
            corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
-    lcon<-grep('[cC][oO][lL][dD]',dfi[,1])
-if(length(lcon)>0){
- if(length(lcon)>1){
-    ncon<-which.min(abs(1-fr[lcon,1]))
-    corr<-mmlab[1,]-gcmsn[lcon,][ncon,] 
- } else if(length(lcon)==1){
-  corr<-mmlab[1,]-gcmsn[lcon,]
- }
-     tmp<-t(apply(gcmsn,1,'+',corr)); 
-     fr<-mdistr(nmass,tmp,mmlab,nln);
-     res<-cbind(dfi[,1],round(fr[,1:(nfrg+1)],4))
-   write("\n*** Samples fully corrected **",fn1,append=TRUE)
- write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
-   write("*** Correction factor: **",fn1,append=TRUE)
- write.table(format(t(corr),digits=4),fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F);
-}
+     cold<- grep(info[2],dfi[,1])
+     incold<-which(as.numeric(dfi[cold,2])<as.numeric(info[1]))
+     cold<-cold[incold]
+    if(length(cold)<1) {print(paste(metdat$Name,': No unlabeled provided')); return()}
+    if(nln==1) {print(paste(metdat$Name,': No samples except one unlabeled')); return()}
+    
+    ncon<-cold[which.min(abs(1-fr[cold,1]))]
+    
+    if(fr[ncon,1]<0.95) print(paste(metdat$Name,': m0 in unlabeled <',0.95))
+    if(as.numeric(dfi[ncon,2])>as.numeric(info[1])) {
+      print(paste(metdat$Name,': Max peak in unlabeled =',dfi[ncon,2]))  }
+    corr<-mmlab[1,]-gcmsn[ncon,1:ncol(mmlab)] 
+     tmp<-t(apply(gcmsn[,1:ncol(mmlab)],1,'+',corr)); 
+     fr<-mdistr(nfrg,tmp,mmlab,nln);
+     res<-cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4))
+     cold<-res[ncon,]
+     res[ncon,]<-res[1,]
+     res[1,]<-cold
+      
+  write("\n*** Samples additionally corrected for possible matrix effects **",fn1,append=TRUE)
+  write(paste(mzis,collapse=' '),fn1,append=T);    mzis<-character()
+  write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
+ 
+      mzis<-paste('CF_m',0:nfrg,sep='')
+  write("\n*** Correction factor: **",fn1,append=TRUE)
+  write(paste(mzis,collapse=' '),fn1,append=T)
+  write.table(format(t(corr[1:(nfrg+1)]),digits=4),fn1,quote=F,append=T,col.names=F, row.names = F);
+
   phen<-""; fr<-cbind(0,round(fr[,-ncol(fr)],4)); gc<-cbind(0,gcms[,-ncol(gcms)])
   for(i in 1:nrow(dfi)){
     a<- wphen(as.character(dfi[i,1]),metdat$Name,frag, formula, metdat$RT, mzi,round(gcms[i,]),fr[i,])

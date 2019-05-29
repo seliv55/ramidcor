@@ -1,12 +1,13 @@
 #  setwd(oldi)
 # oldi<-getwd()
 #  source('R/lib.R')
+#  source('R/ramidwin.R')
 # print(infile)
 #ramid(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan')
 # ramid(infile="../INES/ScanList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",md='scan')  
 # ramid(infile="../INES/SimList.csv",cdfdir="../INES/PIM/Parental_Hypoxia/Parental_Hypoxia_SIMLAC.AIA/",fiout="out.csv",md='sim')
 #ramid(infile='../johanna/MediaHELNormoxia/MediaHELNorLong',cdfdir='../johanna/MediaHELNormoxia/Media HEL Nor Long/',fiout="out.csv",md='scan')
-#ramid(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',cdfdir='../johanna/MediaHELHypoxia/Media HEL Hyp long/',fiout="out.csv",md='scan')
+#ramid(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',cdfdir='../johanna/MediaHELHypoxia/Media HEL Hyp long/')
 
  library(ncdf4)
 ramid<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan'){
@@ -24,7 +25,7 @@ title<-ftitle()
      res<-character(); res1<-character(); res2<-character(); phen<-""
      if(md=='scan') for(fi in lcdf){ # fi <- lcdf[1]
             fi<-paste(cdfdir,fi, sep="");     fi1<-fi
-            a <-discan(fi,intab) 
+            a <-discan(fi,intab,senlim) 
             res<-c(res,a[[1]])
             res1<-c(res1,a[[2]])
             res2<-c(res2,a[[3]])
@@ -41,7 +42,7 @@ title<-ftitle()
        write(phen,fiout,append=T)
        a<-strsplit(cdfdir,"/")[[1]];  len<-length(a)
        if(len==1) { if(!(file.exists(outdir))) dir.create(outdir)
-           celdir<-paste(outdir,a[length(a)],"/",sep='') } else if(len>1){ celdir<-paste("../",a[2],"/",outdir,sep='')
+           celdir<-paste(outdir,a[length(a)],"/",sep='') } else if(len>1){ celdir<-paste(a[1],"/",outdir,sep='')
            if(!(file.exists(celdir))) dir.create(celdir)
            celdir<-paste(celdir,a[len],"/",sep='')
        }
@@ -203,10 +204,9 @@ if(rpikpos>(4*len/5)) {
 return(list(lpikpos,rpikpos,mat,vekc))}
 
  
-discan<-function(fi,intab, tlim=20){
+discan<-function(fi,intab,limsens, tlim=20){
 # fi: file name
 # intab: parameters of metabolite (mz for m0, retention time)
-    limsens<-8000000
 
     a<-readcdf(fi); 
      result<-character(); res1<-character(); res2<-character()
@@ -250,7 +250,7 @@ discan<-function(fi,intab, tlim=20){
       
       if((pikposm<piklim)|(pikposm>(length(intensm[,2])-piklim))) next
        bs<-basln(intensm[,2]); if(bs==0) next
-      if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 5*bs) next
+      if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 3*bs) next
 # control peak
          intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
          pikposc<-which.max(intcshort)
