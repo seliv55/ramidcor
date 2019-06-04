@@ -50,7 +50,7 @@ title<-ftitle()
        if(!(file.exists(celdir))) dir.create(celdir)
       
        for(nam in intab$Name) {ofi<-paste(celdir,nam,sep="")
-        write(paste('###\t\t\tRAMID version 1.0',Sys.time(),'\t***\n'),ofi)
+        write(paste('###\tRAMID version 1.0:',tools::md5sum('R/ramidwin.R'),Sys.time(),'\t***\n'),ofi)
           tmp<-subset(res,(grepl(as.character(nam),res)))
           if(length(tmp)){
             mzrow<-subset(tmp,(grepl("mz:",tmp)))
@@ -240,7 +240,7 @@ discan<-function(fi,intab,limsens, tlim=20){
    a<-psimat(nr=ltpeak, nmass=nmassm, imzi, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, ofs=2)
     intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
       
-    piklim<-7;  nmassc<-1
+    piklim<-9;  nmassc<-1
    a<-psimat(nr=ltpeak, nmass=nmassc, imzi, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
 
@@ -252,9 +252,10 @@ discan<-function(fi,intab,limsens, tlim=20){
        bs<-basln(intensm[,2]); if(bs==0) next
       if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 3*bs) next
 # control peak
-         intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
-         pikposc<-which.max(intcshort)
-        if(abs(pikposc-piklim)>5) next
+#         intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
+#         pikposc<-which.max(intcshort)
+#        if(abs(pikposc-piklim)>6) next
+        if((sum(intensc[(pikposm-1):(pikposm+1)])/3) < ((intensc[(pikposm-2)]+intensc[(pikposm+2)])/2) ) next
 
        maxpikc<-intcshort[pikposc]
        maxpikm<-max(intensm[pikposm,])
