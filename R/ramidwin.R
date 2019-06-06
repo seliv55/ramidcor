@@ -10,7 +10,7 @@
 #ramid(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',cdfdir='../johanna/MediaHELHypoxia/Media HEL Hyp long/')
 
  library(ncdf4)
-ramid<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan'){
+ramid<-function(infile,cdfdir,fiout="out.csv",md='scan',control=T){
    if(md=='uhr') {a<-icms(); return(a)}
    start.time <- Sys.time()
    pat=".CDF"
@@ -25,7 +25,7 @@ title<-ftitle()
      res<-character(); res1<-character(); res2<-character(); phen<-""
      if(md=='scan') for(fi in lcdf){ # fi <- lcdf[1]
             fi<-paste(cdfdir,fi, sep="");     fi1<-fi
-            a <-discan(fi,intab,senlim) 
+            a <-discan(fi,intab,limsens=senlim,cnt=control) 
             res<-c(res,a[[1]])
             res1<-c(res1,a[[2]])
             res2<-c(res2,a[[3]])
@@ -204,7 +204,7 @@ if(rpikpos>(4*len/5)) {
 return(list(lpikpos,rpikpos,mat,vekc))}
 
  
-discan<-function(fi,intab,limsens, tlim=20){
+discan<-function(fi,intab,limsens, tlim=20, cnt=T){
 # fi: file name
 # intab: parameters of metabolite (mz for m0, retention time)
 
@@ -255,9 +255,9 @@ discan<-function(fi,intab,limsens, tlim=20){
 #         intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
 #         pikposc<-which.max(intcshort)
 #        if(abs(pikposc-piklim)>6) next
-        if((sum(intensc[(pikposm-1):(pikposm+1)])/3) < ((intensc[(pikposm-2)]+intensc[(pikposm+2)])/2) ) next
+      if(cnt &(sum(intensc[(pikposm-1):(pikposm+1)])/3) < (1.1*(intensc[(pikposm-2)]+intensc[(pikposm+2)])/2) ) next
 
-       maxpikc<-intcshort[pikposc]
+       maxpikc<-intensc[pikposm]
        maxpikm<-max(intensm[pikposm,])
        isomax<-which.max(intensm[pikposm,])
      pikmzm<-numeric(); pikintm<-numeric();  basm<-numeric(); ilim=0
@@ -280,7 +280,7 @@ discan<-function(fi,intab,limsens, tlim=20){
     phenom<-c(phenom,a)
                 rat<-delta/basm
                 rel<-round(delta/max(delta),4)      # normalization
-    pikposc<-pikposm-piklim+pikposc-1;
+    pikposc<-pikposm;
    archar<-paste(c(gsub(' ','_',fi),nm),collapse=" ")
          result<-c(result,archar)
    archar<-paste(c(nm,"RT(min):",round(tpeak[pikposm]/60,3),"c:",round(tpeak[pikposc]/60,3)),collapse=" ")

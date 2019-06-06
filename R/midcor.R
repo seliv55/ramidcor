@@ -30,10 +30,10 @@ fitf<-function(tmp,mmlab,corr,ff,fr,nfrg){ nln=nrow(tmp); nmass=ncol(tmp)-2;
 midcor<-function(infile,dadir){
    a <-read.table(infile, skip=1,nrows=2); info<-as.character(a[,2])
    intab<-read.table(infile, skip=3,header=T); phenom<-""
-   for(imet in 1:nrow(intab)){
+   for(imet in 1:nrow(intab)){ #imet<-6
    met <- as.character(intab$Name[imet])
     fn<-paste(dadir,met,sep="")
-    if((file.exists(fn))&(file.size(fn)>500)){
+    if(file.exists(fn)&file.size(fn)>500){
       con<-file(fn,open="r")
       line<-readLines(con)
       dati<-which(grepl("absolute_v",line))
@@ -77,6 +77,7 @@ correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw da
       gcmss<-matrix(nrow=nln,ncol=coln)
       
       gcmss[,]<-dfi[,-1:-2]
+      dfi<-dfi[,1:2]
       gcms<-NULL
     for(i in 1:coln) cbind(gcms, as.numeric( gcmss[,i]))->gcms
 # theoretic distribution:
@@ -93,48 +94,49 @@ correct<-function(fn,dfi,mzi,metdat,info){#fname is the name of file with raw da
   
  fn1<-paste(fn,".txt",sep="");
  mzis<-c("Sample_file Max_intensity",  paste('m',0:nfrg, sep=''))
- write(paste('###\t\t\tMIDCOR version 1.0',Sys.time(),'\t***\n'),fn1)
+ write(paste('###\tMIDCOR version 1.0:',tools::md5sum('R/midcor.R'),Sys.time(),'\t***\n'),fn1)
  write("*** MID for each injection, corrected for natural enrichment using empirical formula ***",fn1,append=T)
  write(paste(mzis,collapse=' '),fn1,append=T)
- if(nln>1) write.table(cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F) else {
-  write.table(cbind(t(dfi[,1:2]),round(t(fr[,1:(nfrg+1)]),4)),fn1,quote=F,append=T,col.names=F, row.names = F)
+ if(nln>1) write.table(cbind(dfi,round(fr[,1:(nfrg+1)],4)),fn1,quote=F,append=T,col.names=F, row.names = F) else {
+  write.table(cbind(t(dfi),round(t(fr[,1:(nfrg+1)]),4)),fn1,quote=F,append=T,col.names=F, row.names = F)
  }
 # correction
-           corr<-numeric(nmass+1); corr1=numeric(nmass+1); icomm=0;
+           corr<-numeric(nmass+1);
      cold<- grep(info[2],dfi[,1])
      incold<-which(as.numeric(dfi[cold,2])<as.numeric(info[1]))
      cold<-cold[incold]
     if(length(cold)<1) {print(paste(metdat$Name,': No unlabeled provided')); return()}
     if(nln==1) {print(paste(metdat$Name,': No samples except one unlabeled')); return()}
     
-    ncon<-cold[which.min(abs(1-fr[cold,1]))]
-    
-    if(fr[ncon,1]<0.95) print(paste(metdat$Name,': m0 in unlabeled <',0.95))
-    if(as.numeric(dfi[ncon,2])>as.numeric(info[1])) {
-      print(paste(metdat$Name,': Max peak in unlabeled =',dfi[ncon,2]))  }
-    corr<-mmlab[1,]-gcmsn[ncon,1:ncol(mmlab)] 
-     tmp<-t(apply(gcmsn[,1:ncol(mmlab)],1,'+',corr)); 
-     fr<-mdistr(nfrg,tmp,mmlab,nln);
-     res<-cbind(dfi[,1:2],round(fr[,1:(nfrg+1)],4))
-     cold<-res[ncon,]
-     res[ncon,]<-res[1,]
-     res[1,]<-cold
-      
+    dficold<-as.numeric(dfi[cold,2]); frcold<-fr[cold,]; gcold<-gcmsn[cold,]; dfic<-dfi[cold,]
+    dfilab<-as.numeric(dfi[-cold,2]); frlab<-fr[-cold,]; glab<-gcmsn[-cold,]; dfil<-dfi[-cold,]
+    df<-lapply(dfilab,'-',dficold)
+    adf<-lapply(df,abs)
+    madf<-sapply(adf,which.min,simplify=T)
+    if(length(dficold)==1) {frcold<-t(frcold); gcold<-t(gcold); dfic<-t(dfic); }
   write("\n*** Samples additionally corrected for possible matrix effects **",fn1,append=TRUE)
-  write(paste(mzis,collapse=' '),fn1,append=T);    mzis<-character()
-  write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
- 
-      mzis<-paste('CF_m',0:nfrg,sep='')
+    for(i in 1:length(dficold)) {
+         ils<-which(madf==i); if(length(ils)<1) next
+    if(frcold[i,1]<0.95) print(paste(metdat$Name,': m0 in unlabeled <',frcold[i,1]))
+    corr<-mmlab[1,]-gcold[i,1:ncol(mmlab)]
+    gci<-glab[ils,]
+    if(length(ils)==1) {tmp<-gci[1:ncol(mmlab)]+corr; nln=1;  } else {
+    tmp<-apply(gci[,1:ncol(mmlab)],1,'+',corr);
+    }
+    tmp<-t(tmp)
+     fr<-mdistr(nfrg,tmp,mmlab,nln);
+     if(length(ils)==1) res<-cbind(t(dfil[ils,]),t(round(fr[,1:(nfrg+1)],4))) else
+                        res<-cbind(dfil[ils,],round(fr[,1:(nfrg+1)],4))
+     row1<-cbind(t(dfic[i,]),t(round(frcold[i,1:(nfrg+1)],4)))
+     res<-rbind(row1,res)
+      scor<-paste('CF_m',0:nfrg,sep='')
   write("\n*** Correction factor: **",fn1,append=TRUE)
-  write(paste(mzis,collapse=' '),fn1,append=T)
+  write(paste(scor,collapse=' '),fn1,append=T)
   write.table(format(t(corr[1:(nfrg+1)]),digits=4),fn1,quote=F,append=T,col.names=F, row.names = F);
-
-  phen<-""; fr<-cbind(0,round(fr[,-ncol(fr)],4)); gc<-cbind(0,gcms[,-ncol(gcms)])
-  for(i in 1:nrow(dfi)){
-    a<- wphen(as.character(dfi[i,1]),metdat$Name,frag, formula, metdat$RT, mzi,round(gcms[i,]),fr[i,])
-    phen<-c(phen,a)
-  }
-return(phen)}
+  write(paste(mzis,collapse=' '),fn1,append=T);
+  write.table(res,fn1,quote=FALSE,append=TRUE,col.names=FALSE, row.names = F); 
+     }
+return(res)}
 
  isoform<-function(isofi='../filesimid/files/toIsodyn',dadir='../cdf2mid/files/cdfcase3/',marca=2){
         a<-readLines(isofi)
