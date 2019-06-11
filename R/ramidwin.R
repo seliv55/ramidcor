@@ -25,7 +25,7 @@ title<-ftitle()
      res<-character(); res1<-character(); res2<-character(); phen<-""
      if(md=='scan') for(fi in lcdf){ # fi <- lcdf[1]
             fi<-paste(cdfdir,fi, sep="");     fi1<-fi
-            a <-discan(fi,intab,limsens=senlim,cnt=control) 
+            a <-discan(fi,intab,limsens=senlim) 
             res<-c(res,a[[1]])
             res1<-c(res1,a[[2]])
             res2<-c(res2,a[[3]])
@@ -215,11 +215,11 @@ discan<-function(fi,intab,limsens, tlim=20, cnt=T){
 #     totiv<-a[[5]]                     # sum of intensities at each rt
     a<-strsplit(strsplit(fi,".CDF")[[1]][1],"/")[[1]];
     fi<-a[length(a)]; print(fi);  phenom<-""
-     rts<-intab$RT*60.; mz0<-round(intab$mz0,1); mzcon<-round(intab$control,1)
+     rts<-intab$RT*60.; mz0<-round(intab$mz0,1); mzcon<-round(as.numeric(as.character(intab$control)),1)
 #     totiv<-a[[5]]                     # sum of intensities at each rt
       dmz=0.49  # index of beginning of mz scan interval for each timepoint
 #  search for specified metabolites
- for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){#imet<-23#729fcf
+ for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){#imet<-23#ad7fa8
    nm<-as.character(intab$Name[imet])
    itpeak<-which(abs(rett-rts[imet])<tlim)  # index of timepoint closest to theoretical retention time
    ltpeak<-length(itpeak)
@@ -241,6 +241,7 @@ discan<-function(fi,intab,limsens, tlim=20, cnt=T){
     intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
       
     piklim<-9;  nmassc<-1
+    if(is.na(mzcon[imet])) mzcon[imet]<-mz0[imet]
    a<-psimat(nr=ltpeak, nmass=nmassc, imzi, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
 
