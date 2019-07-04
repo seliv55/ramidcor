@@ -16,8 +16,8 @@ ramid<-function(infile,cdfdir,fiout="out.csv",md='scan',control=T){
    pat=".CDF"
    lcdf<-dir(path = cdfdir,pattern=pat)
    outdir="files/"
-   a <-read.table(infile, skip=1,nrows=2); senlim<-as.numeric(as.character(a[1,2]))
-   intab<-read.table(infile, skip=3,header=T); phenom<-""
+   a <-read.table(infile, skip=1,nrows=3); senlim<-as.numeric(as.character(a[1,2]))
+   intab<-read.table(infile, skip=4,header=T); phenom<-""
 
 title<-ftitle()
 
@@ -204,7 +204,7 @@ if(rpikpos>(4*len/5)) {
 return(list(lpikpos,rpikpos,mat,vekc))}
 
  
-discan<-function(fi,intab,limsens, tlim=20, cnt=T){
+discan<-function(fi,intab,limsens=senlim, tlim=20, cnt=T){
 # fi: file name
 # intab: parameters of metabolite (mz for m0, retention time)
 
@@ -251,12 +251,11 @@ discan<-function(fi,intab,limsens, tlim=20, cnt=T){
       
       if((pikposm<piklim)|(pikposm>(length(intensm[,2])-piklim))) next
        bs<-basln(intensm[,2]); if(bs==0) next
-      if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 3*bs) next
+      if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 2*bs) next
 # control peak
 #         intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
 #         pikposc<-which.max(intcshort)
 #        if(abs(pikposc-piklim)>6) next
-      if(cnt &(sum(intensc[(pikposm-1):(pikposm+1)])/3) < (1.1*(intensc[(pikposm-2)]+intensc[(pikposm+2)])/2) ) next
 
        maxpikc<-intensc[pikposm]
        maxpikm<-max(intensm[pikposm,])

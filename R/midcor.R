@@ -54,6 +54,7 @@ midcor<-function(infile,dadir){
 
 getcor<-function(dfic,dfil,frcold,gcold,glab,name,mmlab,fil,nfrg,mzis) {
        if(!is.matrix(dfic)) {frcold<-t(frcold); gcold<-t(gcold); dfic<-t(dfic); }
+       if(!is.matrix(dfil)) {glab<-t(glab); dfil<-t(dfil); }
         dficold<-as.numeric(dfic[,2]); out=''
         dfilab<-as.numeric(dfil[,2]);
       scor<-paste('CF_m',0:nfrg,sep='')
