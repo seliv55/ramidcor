@@ -1,24 +1,24 @@
-# simid
-To extract mass isotopomer distribution from CDF files saved by mass spectrometers in SIM mode
+# Ramid
+Extract mass isotopomer distribution from NetCDF files saved by mass spectrometers
 
 ![Logo](figs/logo.png)
 
-# SIMID
+# Ramid
 Version: 1.0
 
 ## Short description
-R-program to read CDF files containing time course of mass spectra of 13C-labeled metabolites, and write the extracted spectra in a format appropriate for further analysis.
+R-program designed to extract mass spectra of 13C-labeled metabolites of interest from raw mass spectrometer recordings.
 
 ## Description
-SIMID is a computer program designed to read the machine-generated files saved in netCDF format containing registered time course of m/z chromatograms. It evaluates the mass isotopomer distribution (MID) at the moment when peaks are reached, and saves the obtained information in a table, making it ready for further correction for natural isotope occurrence.
-SIMID is written in “R”, uses library “ncdf4” (it should be installed before the first use of siMID)  and contains several functions, located in the files “simid.R” and "lib.R", designed to read cdf-files, and analyze and visualize the spectra that they contain. The functionality of SIMID is similar to that of RaMID, with the difference that it does not need the previously prepared table with a list of CDF files and additional information, but uses only a short description of conditions provided by data owners.
+Ramid is an “R” program that extracts mass spectra of 13C-labeled metabolites of interest from NetCDF files containing the raw time course of their elution from a chromatography column,  The characteristics of the metabolites of interest should be specified in a text file. It evaluates the mass isotopomer distribution (MID) at the moment when peaks are reached, and saves the obtained information in a table, making it ready for the next step of fluxomic analysis: correction for natural isotope occurrence.
+Ramid is written in “R”, uses library “ncdf4” (it should be installed before the first use of Ramid)  and contains several functions, located in the files “ramid.R” and "lib.R", designed to read NetCDF files, and analyze and visualize the spectra that they contain. 
 
 ## Key features
-- primary processing of 13C mass isotopomer data obtained with GCMS
+- primary processing of raw mass spectrometry data saned in NetCDF files
 
 ## Functionality
-- Preprocessing of raw data
-- initiation of workflows of the data analysis
+- Extraction of MID of metabolites of interest, specified in a text file, from a series of NetCDF files in one run
+- initiation of workflow of the data analysis aimed at evaluation of metabolic fluxes
 
 ## Approaches
 - Isotopic Labeling Analysis / 13C
@@ -27,7 +27,7 @@ SIMID is written in “R”, uses library “ncdf4” (it should be installed be
 - MS
 
 ## Data Analysis
-siMID reads the CDF files presented in the working directory, and then
+Ramid reads the CDF files presented in the working directory, and then
 - separates the time courses for selected m/z peaks corresponding to specific mass isotopomers;
 - corrects baseline for each selected mz;
 - choses the time points where the distribution of peaks is less contaminated by other compounds and thus is the most representative of the real analyzed distribution of mass isotopomers;
