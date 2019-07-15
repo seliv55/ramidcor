@@ -7,36 +7,38 @@ Extract mass isotopomer distribution from NetCDF files saved by mass spectromete
 Version: 1.0
 
 ## Short description
-R-program designed to extract mass spectra of 13C-labeled metabolites of interest from raw mass spectrometer recordings.
+R-program designed to extract mass spectra (MS) of 13C-labeled metabolites of interest from raw mass spectrometer recordings.
 
 ## Description
-Ramid is an “R” program that extracts mass spectra of 13C-labeled metabolites of interest from NetCDF files containing the raw time course of their elution from a chromatography column,  The characteristics of the metabolites of interest should be specified in a text file. It evaluates the mass isotopomer distribution (MID) at the moment when peaks are reached, and saves the obtained information in a table, making it ready for the next step of fluxomic analysis: correction for natural isotope occurrence.
-Ramid is written in “R”, uses library “ncdf4” (it should be installed before the first use of Ramid)  and contains several functions, located in the files “ramid.R” and "lib.R", designed to read NetCDF files, and analyze and visualize the spectra that they contain. 
+Ramid is an “R” program that extracts mass spectra of 13C-labeled metabolites of interest from NetCDF files containing raw MS recordings of time course of their elution from a chromatography column.  The characteristics of the metabolites of interest should be specified in a text file. It evaluates the mass isotopomer distribution (MID) at the moment when peaks of the elution rates are reached, and saves the obtained information in a table, making it ready for the next step of fluxomic analysis: correction for natural isotope occurrence.
+Ramid is written in “R”, uses library “ncdf4” (it should be installed before the first use of Ramid). The files “ramid.R” and "lib.R" located in a subdidectory 'R' contain the complete code of Ramid. Its functions are designed to read NetCDF files, extract and visualize the spectra that they contain. 
 
 ## Key features
 - primary processing of raw mass spectrometry data saned in NetCDF files
 
 ## Functionality
-- Extraction of MID of metabolites of interest, specified in a text file, from a series of NetCDF files in one run
-- initiation of workflow of the data analysis aimed at evaluation of metabolic fluxes
+- Extraction of MID of metabolites of interest specified in a text file. It processed a series of NetCDF files in one run.
+- Initiation of workflow of stable isotope tracer data analysis aimed at evaluation of metabolic fluxes
 
 ## Approaches
-- Isotopic Labeling Analysis / 13C
+- Using mz and retention time (RT) values to localize the metabolites of interest in the raw MS recordings
     
 ## Instrument Data Types
 - MS
 
 ## Data Analysis
-Ramid reads the CDF files presented in the working directory, and then
-- separates the time courses for selected m/z peaks corresponding to specific mass isotopomers;
+- Ramid reads a NetCDF files presented in a directory specified by an input parameter, and then
+- separates the time courses of the metabolite elution for the selected m/z values around the RT, both indicated in the description text file, which name is specified by an input parameter;
 - corrects baseline for each selected mz;
-- choses the time points where the distribution of peaks is less contaminated by other compounds and thus is the most representative of the real analyzed distribution of mass isotopomers;
-- evaluates this distribution, and saves it in files readable by MIDcor, a program, which performs the next step of analysis, i.e. correction of the RaMID spectra for natural isotope occurrence, which is necessary to perform a fluxomic analysis.
+- determines the actual retention time, which can be different from that indicated a priori in the description file
+- integrates the localized peaks thus evaluating the distributions of mass isotopomers of metabolites of interest;
+- repeats all the previous steps for the next NetCDF file until all such files are processed;
+- saves the extracted MID from all the processed NetCDF files for each metabolite of interest separately in text files readable by MIDcor, a program, which supports the next step of analysis, i.e. correction of the RaMID spectra for natural isotope occurrence.
 
 ## Screenshots
-- screenshot of input data (format Metabolights), output is the same format with one more column added: corrected mass spectrum
+- screenshot of input text file with the description data, output is the same format with one more column added: corrected mass spectrum
 
-![screenshot]()
+![screenshot](input_description_Ramid&Midcor)
 
 ## Tool Authors
 - Vitaly Selivanov (Universitat de Barcelona)
