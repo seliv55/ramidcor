@@ -38,7 +38,7 @@ Ramid is written in “R”, uses library “ncdf4” (it should be installed be
 ## Screenshots
 - screenshot of input text file with the description data, output is the same format with one more column added: corrected mass spectrum
 
-![screenshot](input_description_Ramid&Midcor)
+![screenshot](input_description.png)
 
 ## Tool Authors
 - Vitaly Selivanov (Universitat de Barcelona)
