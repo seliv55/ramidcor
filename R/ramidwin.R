@@ -10,7 +10,7 @@
 #ramid(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',cdfdir='../johanna/MediaHELHypoxia/Media HEL Hyp long/')
 
  library(ncdf4)
-ramid<-function(infile,cdfdir,fiout="out.csv",md='scan',control=T){
+ramid<-function(infile,cdfdir,fiout="out.csv",md='scan'){
    if(md=='uhr') {a<-icms(); return(a)}
    start.time <- Sys.time()
    pat=".CDF"
