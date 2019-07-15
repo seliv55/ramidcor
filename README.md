@@ -122,9 +122,12 @@ cd <path_to_ramidcor>
  
  midcor(infile="sw620",dadir='files/\<NetCDFs/\>')
 ```
-Midcor saves the corrected MID in the files naming them by adding the extension .txt to the names of corresponding input files(which are outputs for Ramid). If Midcor executed in the same session as Ramid, not all the above commands should be axecuted, but only additional to those used for Ramid execution. Then the corrected data can be checked and wrong data edited/eliminated manually.
+Midcor saves the corrected MID in text files naming them by adding the extension .txt to the names of corresponding input files (which are the outputs for Ramid). If Midcor executed in the same session as Ramid, not all the above commands should be used, but only those not used for Ramid execution. Then the corrected data can be checked and wrong data edited/eliminated manually.
 
-3. The tool Isoform reads the checked files performs simple statistical analysis for repeated measurements and prepares the data for simulation.
+
+
+### 3. Preparation for simulation
+The tool Isoform reads the checked files performs simple statistical analysis for repeated measurements and prepares the data for simulation.
 ```
  isoform(isofi='toIsodyn',dor="SW620/",marca=3)
 ```
