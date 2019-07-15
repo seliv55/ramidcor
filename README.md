@@ -1,7 +1,7 @@
 # Ramid
 Extract mass isotopomer distribution from NetCDF files saved by mass spectrometers
 
-![Logo](figs/workflow.png)
+![Logo](/home/vitaly/phenomen/readCDF/ramidcor/figs/workflow.png)
 
 Version: 1.0
 
@@ -96,7 +96,7 @@ Ramid is written in “R”, uses library “ncdf4” (it should be installed be
 - here the first parameters is the path to a text file containing a short description of the metabolites of interest exemplified in the screenshot below; the second parameter is the path to a directory containing the .CDF files with raw mass spectrometer data; 
 ![screenshot](input_description.png)
 
-the third parameter is a path to the output file where the (MID) of all the metabolites of interests are grouped in the format provisional for the database Metabolights; the third parameter is the mode of the mass spectrometer recording, the default value is 'scan'. However, in addition to the default output 'out.csv' Ramid produces a series of files in the directory '../files/<NetCDFs/>', where the data for each metabolite extracted from all the available NetCDF files are saved in separate files under the names of the corresponding metabolite.
+the third parameter is a path to the output file where the (MID) of all the metabolites of interests are grouped in the format provisional for the database Metabolights; the third parameter is the mode of the mass spectrometer recording, the default value is 'scan'. However, in addition to the default output 'out.csv' Ramid produces a series of files in the directory '../files/\<NetCDFs/\>', where the data for each metabolite extracted from all the available NetCDF files are saved in separate files under the names of the corresponding metabolite.
 
 2. The file containing the results provided by SIMID (here "") can be used to fill the database Metabolights. The other outputs prepared by SIMID and saved in "files/SW620/" are made convenient for visual checking and further correction for natural isotope abundance by MIDcor.
  
