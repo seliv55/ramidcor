@@ -3,7 +3,6 @@ Extract mass isotopomer distribution from NetCDF files saved by mass spectromete
 
 ![Logo](figs/logo.png)
 
-# Ramid
 Version: 1.0
 
 ## Short description
@@ -14,7 +13,7 @@ Ramid is an “R” program that extracts mass spectra of 13C-labeled metabolite
 Ramid is written in “R”, uses library “ncdf4” (it should be installed before the first use of Ramid). The files “ramid.R” and "lib.R" located in a subdidectory 'R' contain the complete code of Ramid. Its functions are designed to read NetCDF files, extract and visualize the spectra that they contain. 
 
 ## Key features
-- primary processing of raw mass spectrometry data saned in NetCDF files
+- primary processing raw mass spectrometry data saned in NetCDF files
 
 ## Functionality
 - Extraction of MID of metabolites of interest specified in a text file. It processed a series of NetCDF files in one run.
@@ -27,7 +26,7 @@ Ramid is written in “R”, uses library “ncdf4” (it should be installed be
 - MS
 
 ## Data Analysis
-- Ramid reads a NetCDF files presented in a directory specified by an input parameter, and then
+- Ramid reads a NetCDF file presented in a directory specified by an input parameter, and then
 - separates the time courses of the metabolite elution for the selected m/z values around the RT, both indicated in the description text file, which name is specified by an input parameter;
 - corrects baseline for each selected mz;
 - determines the actual retention time, which can be different from that indicated a priori in the description file
@@ -44,59 +43,58 @@ Ramid is written in “R”, uses library “ncdf4” (it should be installed be
 - Vitaly Selivanov (Universitat de Barcelona)
 
 ## Container Contributors
-- [Pablo Moreno](EBI)
+- Pablo Moreno(EBI)
 
 ## Website
 - N/A
 
 ## Git Repository
-- https://github.com/seliv55/simid
+- https://github.com/seliv55/ramidcor
 
 ## Installation
 
-- As independent program, SIMID itself does not require installation.  There are two ways of using it: either creating a library "simid", or reading source files containing the implemented functions. Standing in the sim2mid directory:
+- Ramid itself does not require installation, just clone or download this directory. However, the R library 'ncdf4' that supports reading NetCDF files should be installed. Also, a library containing Ramid can be created from the code available here, although this is an option. Another option is to read source files directly in each session (see below). To make the library 'ramidcor' the library 'devtools' should be installed. The library 'ramidcor' would contain, in addition to Ramid, also Midcor for the correction of the Ramid extracted spectra and Isoform for formatting the corrected data to prepare them for simulation with Isodyn. To install 'ncdf4', 'devtools' and make the library 'ramidcor' use the following commands:
 
-- 1) Create a library of functions:
    
 ```
+ cd <ramidcor>
+ 
  sudo R
+ 
+ install.packages(‘ncdf4’)
+
+ install.packages(‘devtools’)
 
  library(devtools)
  
  build() 
  
  install() 
- 
- library(simid) 
- 
- library(ncdf4)
-```
-
-- 2) read directly the necessary functions:
-  
-```
- R 
- 
- source("R/simid.R") 
- 
- source("R/midcor.R") 
- 
- source("R/lib.R") 
- 
- source("R/stadyn.R") 
- 
- library(ncdf4)
-```
-
-- a directory should contain the .cdf files that are to be analyzed.
-
+ ```
 ## Usage Instructions
 
-- The programs support three subsequent steps of preparation of raw MS data for the fluxomic analysis. 
-1. Extraction of raw mass spectra from NetCDF files saved by a mass spectrometer, containing recordings in selected intervals of m/z. It is performed using SIMID executing the  command (default arguments are shown):
+- The programs Ramid, Midcor, Isoform support three subsequent steps of preparation of raw MS data for the fluxomic analysis. 
+1. Extraction of raw mass spectra from NetCDF files saved by a mass spectrometer, containing recordings in selected intervals of m/z using Ramid:
 
+  
 ```
-  metan(iinfile="sw620",cdfdir="SW620/",fiout="out.csv")
+ cd <path_to_ramidcor>
+ 
+ R 
+ 
+ # if the library 'ramidcor' was not created, then read the source directly:
+ 
+ source("R/ramidwin.R") 
+ 
+ source("R/lib.R")
+ 
+ # if the library 'ramidcor' was created, load it:
+ 
+ library(ramidcor)
+ 
+ # run Ramid:
+ 
+  ramid(infile='<path_to_description>',cdfdir='<path_to_NetCDFs/>',fiout="out.csv")
 ```
 - here the parameters are (i) the path to an input file with a short description of input data explained in detail below; (ii) the path to a directory containing the .CDF files with raw mass spectrometer data, i.e. registration of the injections into the mass spectrometer performed in the course of the given analyzed experiment; (iii) a path to the directory for the output results (extracted relative intensities for all m/z constituting the mass spectra (or mass isotopomer distributions (MID)) of the metabolites of interests).
 
