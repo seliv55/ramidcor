@@ -163,7 +163,15 @@ This file indicates the information necessary for simulation: time points of sam
 - Run the provided example using the command:
 
 ```
-  metan(infile="sw620",cdfdir="SW620/",fiout="out.csv")
+ cd <.../>ramidcor
+ R
+ source("R/ramidwin.R")
+ source("R/lib.R")
+ ramid(infile='sw620',cdfdir='SW620/')
+source("R/midcor.R") 
+midcor(infile="sw620",dadir='files/SW620/')
+source('R/isoform.R')
+isoform(isofi='toIsodyn',dor='files/SW620/')
 ```
 
 
