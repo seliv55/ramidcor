@@ -3,7 +3,7 @@
 #  source('R/lib.R')
 #  source('R/ramidwin.R')
 # print(infile)
-#ramid(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan')
+#ramid(infile='../filescamid/sw620",cdfdir="../filescamid/SW620/',fiout='out.csv',md='scan')
 # ramid(infile="../INES/ScanList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",md='scan')  
 # ramid(infile="../INES/SimList.csv",cdfdir="../INES/PIM/Parental_Hypoxia/Parental_Hypoxia_SIMLAC.AIA/",fiout="out.csv",md='sim')
 #ramid(infile='../johanna/MediaHELNormoxia/MediaHELNorLong',cdfdir='../johanna/MediaHELNormoxia/Media HEL Nor Long/',fiout="out.csv",md='scan')

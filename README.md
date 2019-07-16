@@ -123,7 +123,8 @@ cd <path_to_ramidcor>
  midcor(infile="sw620",dadir='files/\<NetCDFs/\>')
 ```
 Midcor saves the corrected MID in text files naming them by adding the extension .txt to the names of corresponding input files (which are the outputs for Ramid). If Midcor executed in the same session as Ramid, not all the above commands should be used, but only those not used for Ramid execution. Then the corrected data can be checked and wrong data edited/eliminated manually.
-
+An example of such an output is shown here
+![midcor_out](figs/midcor_output.png)
 
 
 ### 3. Preparation for simulation

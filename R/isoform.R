@@ -1,12 +1,10 @@
 # Program to combine various outputs of Midcor to a single input for Isodyn
 msdlist<-function(trati){nln<-length(trati)
-        ntrati<-lapply(strsplit(trati, " "),as.numeric)
-        lnumv<-!lapply(ntrati,is.na)[[1]]
-        mdis<-matrix(ncol=length(ntrati[[1]][lnumv]),nrow=nln,0)
-        mdis[1,]<-ntrati[[1]][lnumv]
-      if(nln>1)for(i in 2:nln){
-        lnumv<-!lapply(ntrati,is.na)[[i]]
-        mdis[i,]<-ntrati[[i]][lnumv]
+        ntrati<-strsplit(trati, " ")
+        len<-length(ntrati[[1]])
+        mdis<-matrix(ncol=(len-2),nrow=nln,0)
+     for(i in 1:nln){
+        mdis[i,]<-as.numeric(ntrati[[i]][3:len])
       } 
         mval<-round(apply(mdis,2,mean),4)
         sdv<-round(apply(mdis,2,sd),3)
