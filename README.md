@@ -123,12 +123,20 @@ cd <path_to_ramidcor>
  midcor(infile="sw620",dadir='files/\<NetCDFs/\>')
 ```
 Midcor saves the corrected MID in text files naming them by adding the extension .txt to the names of corresponding input files (which are the outputs for Ramid). If Midcor executed in the same session as Ramid, not all the above commands should be used, but only those not used for Ramid execution. Then the corrected data can be checked and wrong data edited/eliminated manually.
-An example of such an output is shown here
+An example of the format in a text file of Midcor output is shown here
 ![midcor_out](figs/Midcor_output.png)
 
 
-### 3. Preparation for simulation
-The tool Isoform reads the checked files performs simple statistical analysis for repeated measurements and prepares the data for simulation.
+### 3. Preparation for simulation performed by Isodyn
+Midcor corrects the MID for all of the provided samples, which may refer to distinct conditions that the tool Isodyn designed for simulations of system dynamics should reproduce separately. Also, the data related to different time points of incubation Isodyn treats accordingly. Moreover, it accounts not every sample, but rather the mean values for the chosen conditions and time point of incubation. The tool Isoform reads the output of Midcor, groups the data by the condition, and by incubation time for the data of the given condition. Then it finds the mean values and standard deviations of relative labeling in the selected groups and saves such data prepared for simulation. 
+It takes the information, necessary to perform such a preparation of data, from a text file that should be provided with respect to the following format:
+![isoform_in](figs/isoform_intput.png)
+
+The first line contains the names of metabolites, whose data Isodyn will simulate, and first and last carbons of the fragment that was registered. The names of metabolites at the same time are the names of files where the respective MID were saved. The second line indicates the available time points of incubation. The third line shows the conditions, in the presented example, it is a nickname of the tracer, as it is abbreviated in the names of the NetCDF files. The last line shows the specific isotopomer used as a tracer. It represented by the binary numbers, assuming that 1 is 13C and 0 is 12C. In this way, 1,2-13C -Glucose is expressed as binary 110000 that, being transformed into the decimal, means 48; uniformly labeled glutamine is represented as 11111, which, being converted into the decimal, means 31. The last number is the fraction of the tracer in the provided substrate.
+Thus, the first line indicates the file name where to search the MID of interest, and the information presented in the other lines the program searches in the names of the NetCDF files.
+#### The names of CDF files provided
+- The names of CDF files should contain specific information referred to each separate measurement. Here is an example of the filename: "SW620_6h_12Glc_R1_PIM_SIM_01.CDF". SW620 is the type of analyzed cells 6h is the time of incubation 12Glc indicates the artificially labeled substrate applied. R1 is an index of biological replicate 01 is an index of injection to MS machine from the same biological replicate.
+
 ```
  isoform(isofi='toIsodyn',dor="SW620/",marca=3)
 ```
@@ -142,9 +150,6 @@ The tool Isoform reads the checked files performs simple statistical analysis fo
 (v) chemical formula of the derivatized compound containing the given fragment; 
 (vi) m/z value of the lightest isotopomer corresponding to another fragment of the same metabolite (control).
 
-## The names of CDF files provided
-
-- The input file (here "sw620") provides the general informarion used by the program. Moreover, the names of CDF files should contain a specific information referred to each separate measurement. Here is an example of filename: "SW620_6h_12Glc_R1_PIM_SIM_01.CDF". SW620 is the type of analyzed cells 6h is the time of incubation 12Glc indicates the artificially labeled substrate applied. R1 is a number of biological replicate 01 is a number of ingection to MS machine from the same biological replicate
 
 Based on this information and that extracted from the CDF files presented in the working directory siMID evaluates the mass spectra of the metabolites listed in "metdata", and saves it in tables accepted as exchangeable with Metabolights database.
 
