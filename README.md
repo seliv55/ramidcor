@@ -1,15 +1,16 @@
-# Ramid
-Extract mass isotopomer distribution from NetCDF files saved by mass spectrometers
+# Ramid, Midcor, Isoform
+Stable Isotope Resiolved Metabolonics (SIRM): preparation of data from raw mass spectrometers recording to  fluxomic analysis. 
 
 ![Logo](figs/workflow.png)
 
 Version: 1.0
 
 ## Short description
-R-program designed to extract mass spectra (MS) of 13C-labeled metabolites of interest from raw mass spectrometer recordings.
+A suit of R-programs designed to extract mass spectra (MS) of 13C-labeled metabolites of interest from raw mass spectrometer recordings, correct them for natural isotope occurrence, grouping the data designed for simultaneous reproducing in a kinetic model.
 
 ## Description
-Ramid is an “R” program that extracts mass spectra of 13C-labeled metabolites of interest from NetCDF files containing raw MS recordings of time course of their elution from a chromatography column.  The characteristics of the metabolites of interest should be specified in a text file. It evaluates the mass isotopomer distribution (MID) at the moment when peaks of the elution rates are reached, and saves the obtained information in a table, making it ready for the next step of fluxomic analysis: correction for natural isotope occurrence.
+Ramid extracts mass spectra of 13C-labeled metabolites of interest, specified by their m/z values and retention time (RT) in a text file, from raw mass spectrometer recordings (currently in NetCDF format) of time course of their elution from a chromatography column. It evaluates the mass isotopomer distribution (MID) at the moment when peaks of the elution rates are reached.
+Midcor takes the spectra extracted by Ramid and corrects them for matural isotope occurrence.
 Ramid is written in “R”, uses library “ncdf4” (it should be installed before the first use of Ramid). The files “ramid.R” and "lib.R" located in a subdidectory 'R' contain the complete code of Ramid. Its functions are designed to read NetCDF files, extract and visualize the spectra that they contain. 
 
 ## Key features
