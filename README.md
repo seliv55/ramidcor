@@ -136,23 +136,28 @@ The first line contains the names of metabolites, whose data Isodyn will simulat
 Thus, the first line indicates the file name where to search the MID of interest, and the information presented in the other lines the program searches in the names of the NetCDF files.
 #### The names of CDF files provided
 - The names of CDF files should contain specific information referred to each separate measurement. Here is an example of the filename: "SW620_6h_12Glc_R1_PIM_SIM_01.CDF". SW620 is the type of analyzed cells 6h is the time of incubation 12Glc indicates the artificially labeled substrate applied. R1 is an index of biological replicate 01 is an index of injection to MS machine from the same biological replicate.
-
+- The following commands should be used to execute Isoform in separate session:
 ```
- isoform(isofi='toIsodyn',dor="SW620/",marca=3)
+ cd <path_to_ramidcor>
+ 
+ R 
+ 
+ # if the library 'ramidcor' was not created, then read the source directly:
+ 
+ source("R/isoform.R") 
+ # if the library 'ramidcor' was created, load it:
+ 
+ library(ramidcor)
+ 
+ # run Isoform:
+ isoform(isofi='toIsodyn',dor="SW620/",marca=2)
 ```
-## The format of input data description
+- If Isoform executed in the same session as the tools supporting the previous steps, not all the above commands should be used, but only those not used previously.
+- Isoform saves the MID of the metabolites designed for Isodyn to simulate simultaneously in the same run of the program. 
+An example of the format in a text file of Midcor output is shown here
+![isoform_in](figs/Isoform_output.png)
 
-- The input data description file (here "sw620") contains the additional information prepared by the data provider that is necessary for the analysis and for the output table to write in the format accepted as exchangeable with the Metabolights database. It contains the following columns: 
-(i) names of metabolites of interest, which spectra should be extracted from the provided CDF files; 
-(ii) retention time (RT); 
-(iii) m/z value of the lightest isotopomer (mz0) corresponding to the resolved derivatized fragment of metabolite of interest; 
-(iv) position of the resolved carbon fragment in the parent molecule; 
-(v) chemical formula of the derivatized compound containing the given fragment; 
-(vi) m/z value of the lightest isotopomer corresponding to another fragment of the same metabolite (control).
-
-
-Based on this information and that extracted from the CDF files presented in the working directory siMID evaluates the mass spectra of the metabolites listed in "metdata", and saves it in tables accepted as exchangeable with Metabolights database.
-
+This file indicates the information necessary for simulation: time points of sampling during incubation; mean values and SD of labeling for various metabolites and time points. Isodyn reads this information and adjust simulations respectively.
 ## An example provided
 
 - Run the provided example using the command:
