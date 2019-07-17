@@ -1,0 +1,6 @@
+Names: Lactate,0,2 Alanine_C1C3,0,2 Alanine_C2C3,1,2 Aspartate_C1C4,0,3 Aspartate_C2C4,1,3 Citrate,0,5 Fumarate,0,3 Glutamate,0,4 Malate,0,3 Serine_C1C3,0,2 Serine_C2C3,1,2 
+time(h): 0 6 24 -1
+tracers: 12Glc UGln
+Glucose 48 0.5
+Glutamin 31 1.0
+
