@@ -18,27 +18,27 @@ Isoform reads the results of Midcor and prepares the data for simulation with Is
 ## Functionality
 - Extraction of MID of metabolites of interest specified in a text file. It processed a series of NetCDF files in one run.
 - Correction of the extracted MID
-- Preparation of the corrected data to simulation by 
+- Preparation of the corrected data to simulation by Isodyn
 
 ## Approaches
 - Using mz and retention time (RT) values to localize the metabolites of interest in the raw MS recordings
     
 ## Instrument Data Types
--- MS
+- MS
 
 ## Data Analysis
-- Ramid: 
-  reads a NetCDF file presented in a directory specified by an input parameter, and then
-  separates the time courses of the metabolite elution for the selected m/z values around the RT, both indicated in the description text file, whose name is specified by an input parameter;
-  corrects baseline for each selected mz;
-  determines the actual retention time, which can be different from that indicated a priori in the description file
-  integrates the localized peaks thus evaluating the distributions of mass isotopomers of metabolites of interest;
-  repeats all the previous steps for the next NetCDF file until all such files are processed;
-  saves the extracted MID from all the processed NetCDF files for each metabolite of interest separately in text files readable by MIDcor, a program, which supports the next step of analysis, i.e. correction of the RaMID spectra for natural isotope occurrence.
+- __Ramid:__ 
+*  reads a NetCDF file presented in a directory specified by an input parameter, and then
+*  separates the time courses of the metabolite elution for the selected m/z values around the RT, both indicated in the description text file, whose name is specified by an input parameter;
+*  corrects baseline for each selected mz;
+*  determines the actual retention time, which can be different from that indicated a priori in the description file
+*  integrates the localized peaks thus evaluating the distributions of mass isotopomers of metabolites of interest;
+*  repeats all the previous steps for the next NetCDF file until all such files are processed;
+*  saves the extracted MID from all the processed NetCDF files for each metabolite of interest separately in text files readable by MIDcor, a program, which supports the next step of analysis, i.e. correction of the RaMID spectra for natural isotope occurrence.
 - Midcor
-  reads the results of Ramid and corrects the MID of the metabolites of interest for natural isotope occurrence and overlapping with the foreign peaks
+*  reads the results of Ramid and corrects the MID of the metabolites of interest for natural isotope occurrence and overlapping with the foreign peaks
 - Isoform
-  reads the results of Midcor and prepares the data for simulation with Isodyn
+*  reads the results of Midcor and prepares the data for simulation with Isodyn
 
 ## Tool Authors
 - Vitaly Selivanov (Universitat de Barcelona)
@@ -135,7 +135,7 @@ An example of the format in a text file of Midcor output is shown here
 
 ### 3. Preparation for simulation performed by Isodyn
 Midcor corrects the MID for all of the provided samples, which may refer to distinct conditions that the tool Isodyn designed for simulations of system dynamics should reproduce separately. Also, the data related to different time points of incubation Isodyn treats accordingly. Moreover, it accounts not every sample, but rather the mean values for the chosen conditions and time point of incubation. The tool Isoform reads the output of Midcor, groups the data by the condition, and by incubation time for the data of the given condition. Then it finds the mean values and standard deviations of relative labeling in the selected groups and saves such data prepared for simulation. 
-It takes the information, necessary to perform such a preparation of data, from a text file that should be provided with respect to the following format:
+* It takes the information, necessary to perform such a preparation of data, from a text file that should be provided with respect to the following format:
 ![isoform_in](figs/isoform_input.png)
 
 The first line contains the names of metabolites, whose data Isodyn will simulate, and first and last carbons of the fragment that was registered. The names of metabolites at the same time are the names of files where the respective MID were saved. The second line indicates the available time points of incubation. The third line shows the conditions, in the presented example, it is a nickname of the tracer, as it is abbreviated in the names of the NetCDF files. The last line shows the specific isotopomer used as a tracer. It represented by the binary numbers, assuming that 1 is 13C and 0 is 12C. In this way, 1,2-13C -Glucose is expressed as binary 110000 that, being transformed into the decimal, means 48; uniformly labeled glutamine is represented as 11111, which, being converted into the decimal, means 31. The last number is the fraction of the tracer in the provided substrate.
@@ -174,10 +174,10 @@ This file indicates the information necessary for simulation: time points of sam
  source("R/ramidwin.R")
  source("R/lib.R")
  ramid(infile='sw620',cdfdir='SW620/')
-source("R/midcor.R") 
-midcor(infile="sw620",dadir='files/SW620/')
-source('R/isoform.R')
-isoform(isofi='toIsodyn',dor='files/SW620/')
+ source("R/midcor.R") 
+ midcor(infile="sw620",dadir='files/SW620/')
+ source('R/isoform.R')
+ isoform(isofi='toIsodyn',dor='files/SW620/')
 ```
 
 
