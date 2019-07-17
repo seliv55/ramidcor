@@ -3,21 +3,21 @@
 #  source('R/lib.R')
 #  source('R/ramidwin.R')
 # print(infile)
-#ramid(infile="../filescamid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan')
+#ramid(infile='../filescamid/sw620",cdfdir="../filescamid/SW620/',fiout='out.csv',md='scan')
 # ramid(infile="../INES/ScanList.csv",cdfdir="../INES/PIM/KO_Hypoxia/KO_Hypoxia_SCANLAC.AIA/",fiout="out.csv",md='scan')  
 # ramid(infile="../INES/SimList.csv",cdfdir="../INES/PIM/Parental_Hypoxia/Parental_Hypoxia_SIMLAC.AIA/",fiout="out.csv",md='sim')
 #ramid(infile='../johanna/MediaHELNormoxia/MediaHELNorLong',cdfdir='../johanna/MediaHELNormoxia/Media HEL Nor Long/',fiout="out.csv",md='scan')
 #ramid(infile='../johanna/MediaHELHypoxia/Media HEL Hyp long.txt',cdfdir='../johanna/MediaHELHypoxia/Media HEL Hyp long/')
 
  library(ncdf4)
-ramid<-function(infile="../filesimid/sw620",cdfdir="../filescamid/SW620/",fiout="out.csv",md='scan'){
+ramid<-function(infile,cdfdir,fiout="out.csv",md='scan'){
    if(md=='uhr') {a<-icms(); return(a)}
    start.time <- Sys.time()
    pat=".CDF"
    lcdf<-dir(path = cdfdir,pattern=pat)
    outdir="files/"
-   a <-read.table(infile, skip=1,nrows=2); senlim<-as.numeric(as.character(a[1,2]))
-   intab<-read.table(infile, skip=3,header=T); phenom<-""
+   a <-read.table(infile, skip=1,nrows=3); senlim<-as.numeric(as.character(a[1,2]))
+   intab<-read.table(infile, skip=4,header=T); phenom<-""
 
 title<-ftitle()
 
@@ -25,7 +25,7 @@ title<-ftitle()
      res<-character(); res1<-character(); res2<-character(); phen<-""
      if(md=='scan') for(fi in lcdf){ # fi <- lcdf[1]
             fi<-paste(cdfdir,fi, sep="");     fi1<-fi
-            a <-discan(fi,intab,senlim) 
+            a <-discan(fi,intab,limsens=senlim) 
             res<-c(res,a[[1]])
             res1<-c(res1,a[[2]])
             res2<-c(res2,a[[3]])
@@ -50,7 +50,7 @@ title<-ftitle()
        if(!(file.exists(celdir))) dir.create(celdir)
       
        for(nam in intab$Name) {ofi<-paste(celdir,nam,sep="")
-        write(paste('###\t\t\tRAMID version 1.0',Sys.time(),'\t***\n'),ofi)
+        write(paste('###\tRAMID version 1.0:',tools::md5sum('R/ramidwin.R'),Sys.time(),'\t***\n'),ofi)
           tmp<-subset(res,(grepl(as.character(nam),res)))
           if(length(tmp)){
             mzrow<-subset(tmp,(grepl("mz:",tmp)))
@@ -204,7 +204,7 @@ if(rpikpos>(4*len/5)) {
 return(list(lpikpos,rpikpos,mat,vekc))}
 
  
-discan<-function(fi,intab,limsens, tlim=20){
+discan<-function(fi,intab,limsens=senlim, tlim=20, cnt=T){
 # fi: file name
 # intab: parameters of metabolite (mz for m0, retention time)
 
@@ -215,11 +215,11 @@ discan<-function(fi,intab,limsens, tlim=20){
 #     totiv<-a[[5]]                     # sum of intensities at each rt
     a<-strsplit(strsplit(fi,".CDF")[[1]][1],"/")[[1]];
     fi<-a[length(a)]; print(fi);  phenom<-""
-     rts<-intab$RT*60.; mz0<-round(intab$mz0,1); mzcon<-round(intab$control,1)
+     rts<-intab$RT*60.; mz0<-round(intab$mz0,1); mzcon<-round(as.numeric(as.character(intab$control)),1)
 #     totiv<-a[[5]]                     # sum of intensities at each rt
       dmz=0.49  # index of beginning of mz scan interval for each timepoint
 #  search for specified metabolites
- for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){#imet<-23#729fcf
+ for(imet in 1:nrow(intab)) if(max(rett)>rts[imet]){#imet<-23#ad7fa8
    nm<-as.character(intab$Name[imet])
    itpeak<-which(abs(rett-rts[imet])<tlim)  # index of timepoint closest to theoretical retention time
    ltpeak<-length(itpeak)
@@ -240,7 +240,8 @@ discan<-function(fi,intab,limsens, tlim=20){
    a<-psimat(nr=ltpeak, nmass=nmassm, imzi, mzpeak, ivpeak, mzz0=mz0[imet], dmzz=dmz, ofs=2)
     intensm<-a[[2]]; selmzm<-a[[3]]; intensm[is.na(intensm)]<-0; selmzm[is.na(selmzm)]<-0;
       
-    piklim<-7;  nmassc<-1
+    piklim<-9;  nmassc<-1
+    if(is.na(mzcon[imet])) mzcon[imet]<-mz0[imet]
    a<-psimat(nr=ltpeak, nmass=nmassc, imzi, mzpeak, ivpeak, mzz0=mzcon[imet], dmzz=dmz, ofs=1)
     intensc<-a[[2]]; selmzc<-a[[3]]; intensc[is.na(intensc)]<-0; selmzc[is.na(selmzc)]<-0;
 
@@ -250,13 +251,13 @@ discan<-function(fi,intab,limsens, tlim=20){
       
       if((pikposm<piklim)|(pikposm>(length(intensm[,2])-piklim))) next
        bs<-basln(intensm[,2]); if(bs==0) next
-      if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 3*bs) next
+      if(sum(intensm[(pikposm-2):(pikposm+2),2])/5< 2*bs) next
 # control peak
-         intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
-         pikposc<-which.max(intcshort)
-        if(abs(pikposc-piklim)>5) next
+#         intcshort<-intensc[(pikposm-piklim):(pikposm+piklim)]
+#         pikposc<-which.max(intcshort)
+#        if(abs(pikposc-piklim)>6) next
 
-       maxpikc<-intcshort[pikposc]
+       maxpikc<-intensc[pikposm]
        maxpikm<-max(intensm[pikposm,])
        isomax<-which.max(intensm[pikposm,])
      pikmzm<-numeric(); pikintm<-numeric();  basm<-numeric(); ilim=0
@@ -279,7 +280,7 @@ discan<-function(fi,intab,limsens, tlim=20){
     phenom<-c(phenom,a)
                 rat<-delta/basm
                 rel<-round(delta/max(delta),4)      # normalization
-    pikposc<-pikposm-piklim+pikposc-1;
+    pikposc<-pikposm;
    archar<-paste(c(gsub(' ','_',fi),nm),collapse=" ")
          result<-c(result,archar)
    archar<-paste(c(nm,"RT(min):",round(tpeak[pikposm]/60,3),"c:",round(tpeak[pikposc]/60,3)),collapse=" ")
