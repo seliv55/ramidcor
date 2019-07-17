@@ -9,31 +9,36 @@ Version: 1.0
 A suit of R-programs designed to extract mass spectra (MS) of 13C-labeled metabolites of interest from raw mass spectrometer recordings, correct them for natural isotope occurrence, grouping the data designed for simultaneous reproducing in a kinetic model.
 
 ## Description
-Ramid extracts mass spectra of 13C-labeled metabolites of interest, specified by their m/z values and retention time (RT) in a text file, from raw mass spectrometer recordings (currently in NetCDF format) of time course of their elution from a chromatography column. It evaluates the mass isotopomer distribution (MID) at the moment when peaks of the elution rates are reached.
-Midcor takes the spectra extracted by Ramid and corrects them for matural isotope occurrence.
-Ramid is written in “R”, uses library “ncdf4” (it should be installed before the first use of Ramid). The files “ramid.R” and "lib.R" located in a subdidectory 'R' contain the complete code of Ramid. Its functions are designed to read NetCDF files, extract and visualize the spectra that they contain. 
-
+Ramid extracts mass spectra of 13C-labeled metabolites of interest from raw mass spectrometer recordings of the time course of their elution from a chromatography column. A description text file should specify the metabolites of interest by their m/z values and retention time (RT). Ramid evaluates mass isotopomer distributions (MID) of metabolites at the moments of their maximal elution rates, expected to be close to the specified a priori RT values. Ramid uses library "ncdf4" to read the NetCDF files containing the raw data. It is necessary to install it before the first use of Ramid. The files "ramid.R" and "lib.R" located in a subdirectory 'R' contain the complete code of Ramid. Its functions reside in reading NetCDF files, extracting and visualizing the spectra that they contain. 
+Midcor takes the spectra extracted by Ramid and corrects them for natural isotope occurrence and possible overlapping with those of some foreign substances. Thus it provides the mass isotopomer distribution (MID) produced by isotopes artificially introduced into the substrates used.
+Isoform reads the results of Midcor and prepares the data for simulation with Isodyn.  For each metabolite, groups the corrected MID by the conditions that will be simulated and then by the time of sampling. Then it finds the mean value and SD inside the groups, combines the obtained values for all the metabolites whose MID Isodyn will use in the same simulation.
 ## Key features
 - primary processing raw mass spectrometry data saned in NetCDF files
 
 ## Functionality
 - Extraction of MID of metabolites of interest specified in a text file. It processed a series of NetCDF files in one run.
-- Initiation of workflow of stable isotope tracer data analysis aimed at evaluation of metabolic fluxes
+- Correction of the extracted MID
+- Preparation of the corrected data to simulation by 
 
 ## Approaches
 - Using mz and retention time (RT) values to localize the metabolites of interest in the raw MS recordings
     
 ## Instrument Data Types
-- MS
+-- MS
 
 ## Data Analysis
-- Ramid reads a NetCDF file presented in a directory specified by an input parameter, and then
-- separates the time courses of the metabolite elution for the selected m/z values around the RT, both indicated in the description text file, which name is specified by an input parameter;
-- corrects baseline for each selected mz;
-- determines the actual retention time, which can be different from that indicated a priori in the description file
-- integrates the localized peaks thus evaluating the distributions of mass isotopomers of metabolites of interest;
-- repeats all the previous steps for the next NetCDF file until all such files are processed;
-- saves the extracted MID from all the processed NetCDF files for each metabolite of interest separately in text files readable by MIDcor, a program, which supports the next step of analysis, i.e. correction of the RaMID spectra for natural isotope occurrence.
+- Ramid: 
+  reads a NetCDF file presented in a directory specified by an input parameter, and then
+  separates the time courses of the metabolite elution for the selected m/z values around the RT, both indicated in the description text file, whose name is specified by an input parameter;
+  corrects baseline for each selected mz;
+  determines the actual retention time, which can be different from that indicated a priori in the description file
+  integrates the localized peaks thus evaluating the distributions of mass isotopomers of metabolites of interest;
+  repeats all the previous steps for the next NetCDF file until all such files are processed;
+  saves the extracted MID from all the processed NetCDF files for each metabolite of interest separately in text files readable by MIDcor, a program, which supports the next step of analysis, i.e. correction of the RaMID spectra for natural isotope occurrence.
+- Midcor
+  reads the results of Ramid and corrects the MID of the metabolites of interest for natural isotope occurrence and overlapping with the foreign peaks
+- Isoform
+  reads the results of Midcor and prepares the data for simulation with Isodyn
 
 ## Tool Authors
 - Vitaly Selivanov (Universitat de Barcelona)
@@ -49,7 +54,7 @@ Ramid is written in “R”, uses library “ncdf4” (it should be installed be
 
 ## Installation
 
-- Ramid itself does not require installation, just clone or download this directory. However, the R library 'ncdf4' that supports reading NetCDF files should be installed. Also, a library containing Ramid can be created from the code available here, although this is an option. Another option is to read source files directly in each session (see below). To make the library 'ramidcor' the library 'devtools' should be installed. The library 'ramidcor' would contain, in addition to Ramid, also Midcor for the correction of the Ramid extracted spectra and Isoform for formatting the corrected data to prepare them for simulation with Isodyn. To install 'ncdf4', 'devtools' and make the library 'ramidcor' use the following commands:
+- To use the presented R-programs clone or download this directory. The R library 'ncdf4' that supports reading NetCDF files should be installed. Also, a library containing Ramid can be created from the code available here, although this is an option. Another option is to read source files directly in each session (see below). To make the library 'ramidcor' the library 'devtools' should be installed. The library 'ramidcor' would contain Ramid, Midcor for the correction of the Ramid extracted spectra and Isoform for formatting the corrected data to prepare them for simulation with Isodyn. To install 'ncdf4', 'devtools' and make the library 'ramidcor' use the following commands:
 
    
 ```
@@ -121,7 +126,7 @@ cd <path_to_ramidcor>
  
  # run Midcor:
  
- midcor(infile="sw620",dadir='files/\<NetCDFs/\>')
+ midcor(infile='<path_to_description>',dadir='<path_to_Ramid_results/\>')
 ```
 Midcor saves the corrected MID in text files naming them by adding the extension .txt to the names of corresponding input files (which are the outputs for Ramid). If Midcor executed in the same session as Ramid, not all the above commands should be used, but only those not used for Ramid execution. Then the corrected data can be checked and wrong data edited/eliminated manually.
 An example of the format in a text file of Midcor output is shown here
@@ -151,7 +156,7 @@ Thus, the first line indicates the file name where to search the MID of interest
  library(ramidcor)
  
  # run Isoform:
- isoform(isofi='toIsodyn',dor="SW620/",marca=2)
+ isoform(isofi='<path_to_instruction_file>', dor ='<path_to_Midcor_results>',marca=2)
 ```
 - If Isoform executed in the same session as the tools supporting the previous steps, not all the above commands should be used, but only those not used previously.
 - Isoform saves the MID of the metabolites designed for Isodyn to simulate simultaneously in the same run of the program. 
