@@ -80,24 +80,15 @@ Isoform reads the results of Midcor and prepares the data for simulation with Is
   
  ```R
  cd <path_to_ramidcor>
- 
  R 
- 
  # if the library 'ramidcor' was not created, then read the source directly:
- 
  source("R/ramidwin.R") 
- 
  source("R/lib.R")
- 
  # if the library 'ramidcor' was created, load it:
- 
  library(ramidcor)
- 
  library(ncdf4)
- 
  # run Ramid:
- 
-  ramid(infile='<path_to_description>',cdfdir='<path_to_NetCDFs/>',fiout='out.csv',md='scan')
+ ramid(infile='<path_to_description>',cdfdir='<path_to_NetCDFs/>',fiout='out.csv',md='scan')
  ```
 - here the first parameters is the path to a text file containing a short description of the metabolites of interest exemplified in the screenshot below; the second parameter is the path to a directory containing the .CDF files with raw mass spectrometer data; 
 ![ramid_input](input_description.png)
