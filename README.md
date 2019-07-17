@@ -35,9 +35,9 @@ Isoform reads the results of Midcor and prepares the data for simulation with Is
 *  integrates the localized peaks thus evaluating the distributions of mass isotopomers of metabolites of interest;
 *  repeats all the previous steps for the next NetCDF file until all such files are processed;
 *  saves the extracted MID from all the processed NetCDF files for each metabolite of interest separately in text files readable by MIDcor, a program, which supports the next step of analysis, i.e. correction of the RaMID spectra for natural isotope occurrence.
-- Midcor
+- __Midcor__
 *  reads the results of Ramid and corrects the MID of the metabolites of interest for natural isotope occurrence and overlapping with the foreign peaks
-- Isoform
+- __Isoform__
 *  reads the results of Midcor and prepares the data for simulation with Isodyn
 
 ## Tool Authors
@@ -78,7 +78,7 @@ Isoform reads the results of Midcor and prepares the data for simulation with Is
 ### 1. Extraction of raw mass spectra from NetCDF files saved by a mass spectrometer using Ramid:
 
   
-```
+ ```R
  cd <path_to_ramidcor>
  
  R 
@@ -98,7 +98,7 @@ Isoform reads the results of Midcor and prepares the data for simulation with Is
  # run Ramid:
  
   ramid(infile='<path_to_description>',cdfdir='<path_to_NetCDFs/>',fiout='out.csv',md='scan')
-```
+ ```
 - here the first parameters is the path to a text file containing a short description of the metabolites of interest exemplified in the screenshot below; the second parameter is the path to a directory containing the .CDF files with raw mass spectrometer data; 
 ![ramid_input](input_description.png)
 
